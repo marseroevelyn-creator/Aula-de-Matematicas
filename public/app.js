@@ -469,3 +469,37 @@ async function subirCopiaSeguridad(input) {
     };
     lector.readAsText(archivo);
 }
+// --- NUEVA FUNCIÓN: IMPORTAR RESPALDO DE INFORMACIÓN ---
+async function subirCopiaSeguridad(input) {
+    const archivo = input.files[0];
+    if (!archivo) return;
+
+    if (!confirm("⚠️ ¿Estás seguro de restaurar este respaldo? Se borrarán TODOS los datos actuales de forma permanente.")) {
+        input.value = ''; 
+        return;
+    }
+
+    const lector = new FileReader();
+    lector.onload = async (e) => {
+        try {
+            const datosJSON = JSON.parse(e.target.result);
+            
+            const res = await fetch('/api/sistema/restaurar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosJSON)
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                alert("🎉 Sistema restaurado con éxito.");
+                location.reload();
+            } else {
+                alert("Error al restaurar: " + data.error);
+            }
+        } catch (err) {
+            alert("Error: El archivo seleccionado no es un formato JSON válido.");
+        }
+    };
+    lector.readAsText(archivo);
+}
