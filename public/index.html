@@ -34,8 +34,10 @@
     <div id="section-profesora" class="hidden container-dashboard">
         <header class="navbar">
             <h1>Panel Administrativo y Pedagógico</h1>
-            <div>
+            <div class="header-actions">
                 <button onclick="descargarCopiaSeguridad()" class="btn-secondary">💾 Exportar Respaldo</button>
+                <button onclick="document.getElementById('input-importar-json').click()" class="btn-info">📂 Importar Respaldo</button>
+                <input type="file" id="input-importar-json" accept=".json" class="hidden" onchange="subirCopiaSeguridad(this)">
                 <button onclick="logout()" class="btn-danger">Cerrar Sesión</button>
             </div>
         </header>
