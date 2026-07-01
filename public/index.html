@@ -34,101 +34,114 @@
     </div>
 
     <!-- BLOQUE GLOBAL: INTERFAZ COMPLETA DE LA PROFESORA -->
-    <div id="section-profesora" class="hidden container-dashboard">
-        <header class="navbar">
-            <h1>Panel Administrativo y Pedagógico</h1>
-            <div class="header-actions">
-                <button onclick="descargarCopiaSeguridad()" class="btn-secondary">💾 Exportar Respaldo</button>
-                <button onclick="document.getElementById('input-importar-json').click()" class="btn-info">📂 Importar Respaldo</button>
-                <input type="file" id="input-importar-json" accept=".json" class="hidden" onchange="subirCopiaSeguridad(this)">
-                <button onclick="logout()" class="btn-danger">Cerrar Sesión</button>
-            </div>
-        </header>
-
-        <div class="main-grid">
-            <aside class="sidebar-prof">
-                
-                <div class="card">
-                    <h3>🏫 Gestión de Cursos</h3>
-                    <label for="filtro-curso-profesora">Seleccionar Curso Activo:</label>
-                    <select id="filtro-curso-profesora" onchange="cambiarCursoActivoProfesor(this.value)">
-                        <option value="">-- Seleccione un curso --</option>
-                    </select>
-                    <hr>
-                    <label>Crear Nuevo Curso:</label>
-                    <input type="text" id="nuevo-curso-nombre" placeholder="Ej: 4to Año A">
-                    <input type="text" id="nuevo-curso-whatsapp" placeholder="Enlace de WhatsApp (Opcional)">
-                    <button onclick="crearCurso()" class="btn-success">➕ Crear Curso</button>
-                    
-                    <div id="lista-cursos-render" class="lista-items-admin" style="margin-top: 15px;"></div>
-                </div>
-
-                <div class="card">
-                    <h3>👥 Alumnos en este Curso</h3>
-                    <div id="vista-alumnos-curso" class="lista-items-admin">
-                        <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Selecciona un curso arriba para ver sus alumnos.</p>
-                    </div>
-                    <hr>
-                    <label>Registrar Alumno en Curso Activo:</label>
-                    <input type="text" id="nuevo-alumno-username" placeholder="Nombre de usuario (Ej: juan.perez)">
-                    <input type="password" id="nuevo-alumno-password" value="matematica123">
-    
-                    <button onclick="cargarAlumnos()" class="btn-primary" style="width: 100%;">👤 Registrar Alumno</button>
-                </div>
-    
-            </aside>
-
-            <main class="content-prof">
-               
-
-            <!-- Área Central: Banco de Tareas y Revisión de Entregas -->
-            <main class="content-prof">
-                <div class="card">
-                    <h3>Banco de Tareas Automatizado</h3>
-                    <input type="text" id="input-buscar-tarea" placeholder="🔍 Filtrar tareas por título o tema..." oninput="renderizarBancoTareas()">
-                    
-                    <form id="form-nueva-tarea" class="grid-form">
-                        <input type="text" id="t-titulo" placeholder="Título de la Actividad" required>
-                        <input type="text" id="t-carpeta" placeholder="Tema / Carpeta (Ej: Polinomios)" required>
-                        <textarea id="t-desc" placeholder="Instrucciones o consignas de la actividad..."></textarea>
-                        
-                        <label>Subir archivo desde PC (Documento, PDF, Excel, GeoGebra):</label>
-                        <input type="file" id="t-file">
-                        
-                        <input type="url" id="t-link" placeholder="Enlace externo (YouTube, GeoGebra Web, Drive)">
-                        
-                        <label><input type="checkbox" id="t-entrega"> Requiere que el alumno suba una entrega</label>
-                        
-                        <label>Fecha Límite de Entrega:</label>
-                        <input type="datetime-local" id="t-fecha">
-
-                        <label>Desbloquear solo si completa otra tarea anterior (Opcional):</label>
-                        <select id="t-prerrequisito"><option value="">Ninguna (Aparición inmediata)</option></select>
-
-                        <label>Asignación:</label>
-                        <select id="t-asignacion-tipo">
-                            <option value="todo_el_curso">Todo el Curso Actual Seleccionado</option>
-                            <option value="banco">Solo Guardar en Banco (Sin asignar)</option>
-                        </select>
-
-                        <button type="submit" class="btn-primary">Guardar y Procesar Actividad</button>
-                    </form>
-
-                    <div id="banco-tareas-render"></div>
-                </div>
-
-                <!-- Control de Calificaciones y Descargas -->
-                <div class="card">
-                    <h3>Centro de Entregas y Evaluaciones</h3>
-                    <select id="select-tareas-entregas" onchange="cargarEntregasDeTarea()">
-                        <option value="">Selecciona una tarea para auditar entregas</option>
-                    </select>
-                    <div id="tabla-entregas-render"></div>
-                </div>
-            </main>
+  <div id="section-profesora" class="hidden container-dashboard">
+    <header class="navbar">
+        <h1>Panel Administrativo y Pedagógico</h1>
+        <div class="header-actions">
+            <button onclick="descargarCopiaSeguridad()" class="btn-secondary">💾 Exportar Respaldo</button>
+            <button onclick="document.getElementById('input-importar-json').click()" class="btn-info">📂 Importar Respaldo</button>
+            <input type="file" id="input-importar-json" accept=".json" class="hidden" onchange="subirCopiaSeguridad(this)">
+            <button onclick="logout()" class="btn-danger">Cerrar Sesión</button>
         </div>
-    </div>
+    </header>
 
+    <div class="main-grid-profesora">
+        
+        <aside class="sidebar-prof">
+            <div class="card">
+                <h3>🏫 Crear Nuevo Curso</h3>
+                <label>Nombre del Curso:</label>
+                <input type="text" id="nuevo-curso-nombre" placeholder="Ej: 4to Año A">
+                <label>Enlace de WhatsApp (Opcional):</label>
+                <input type="text" id="nuevo-curso-whatsapp" placeholder="https://chat.whatsapp.com/...">
+                <button onclick="crearCurso()" class="btn-success">➕ Crear Curso</button>
+            </div>
+
+            <div class="card">
+                <h3>🗂️ Banco de Tareas</h3>
+                <input type="text" id="input-buscar-tarea" placeholder="🔍 Filtrar tareas por título o tema..." oninput="renderizarBancoTareas()">
+                
+                <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--border-color);">
+                <h4>Nueva Actividad</h4>
+                <form id="form-nueva-tarea" class="grid-form">
+                    <input type="text" id="t-titulo" placeholder="Título de la Actividad" required>
+                    <input type="text" id="t-carpeta" placeholder="Tema / Carpeta (Ej: Polinomios)" required>
+                    <textarea id="t-desc" placeholder="Instrucciones o consignas de la actividad..."></textarea>
+                    
+                    <label>Subir archivo desde PC:</label>
+                    <input type="file" id="t-file">
+                    
+                    <input type="url" id="t-link" placeholder="Enlace externo (YouTube, GeoGebra...)">
+                    
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="t-entrega" style="width: auto; margin: 0;"> Requiere entrega de archivo
+                    </label>
+                    
+                    <label>Fecha Límite:</label>
+                    <input type="datetime-local" id="t-fecha">
+
+                    <label>Prerrequisito (Opcional):</label>
+                    <select id="t-prerrequisito">
+                        <option value="">Ninguna (Inmediata)</option>
+                    </select>
+
+                    <label>Asignación Directa:</label>
+                    <select id="t-asignacion-tipo">
+                        <option value="todo_el_curso">Todo el Curso Activo</option>
+                        <option value="banco">Solo Guardar en Banco</option>
+                    </select>
+
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">💾 Guardar Actividad</button>
+                </form>
+                
+                <div id="banco-tareas-render" class="lista-items-admin" style="margin-top: 15px; max-height: 300px;"></div>
+            </div>
+        </aside>
+
+        <main class="content-prof">
+            <div class="card">
+                <h3>📌 Cursos Registrados</h3>
+                <label for="filtro-curso-profesora"><strong>Selecciona un curso para administrar:</strong></label>
+                <select id="filtro-curso-profesora" onchange="cambiarCursoActivoProfesor(this.value)">
+                    <option value="">-- Seleccione un curso aquí --</option>
+                </select>
+                <div id="lista-cursos-render" class="lista-horizontal-cursos" style="margin-top: 10px;"></div>
+            </div>
+
+            <div class="card">
+                <h3>👥 Alumnos del Curso Activo</h3>
+                <div id="vista-alumnos-curso" class="lista-items-admin-alumnos">
+                    <p style="color: var(--text-muted); text-align: center;">Por favor, seleccione un curso en el desplegable superior para auditar a sus estudiantes.</p>
+                </div>
+                
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+                
+                <h4>👤 Registrar Nuevo Alumno en este Curso</h4>
+                <div class="form-horizontal-alumno" style="display: flex; gap: 10px; align-items: flex-end; margin-top: 10px;">
+                    <div style="flex: 2;">
+                        <label>Nombre de Usuario</label>
+                        <input type="text" id="nuevo-alumno-username" placeholder="Ej: juan.perez" style="margin: 5px 0 0 0;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Contraseña Inicial</label>
+                        <input type="password" id="nuevo-alumno-password" value="usuario" style="margin: 5px 0 0 0;">
+                    </div>
+                    <button onclick="cargarAlumnos()" class="btn-primary" style="height: 40px;">➕ Registrar</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📥 Centro de Entregas y Evaluaciones</h3>
+                <label>Filtrar por Actividad:</label>
+                <select id="select-tareas-entregas" onchange="cargarEntregasDeTarea()">
+                    <option value="">Selecciona una tarea para auditar entregas</option>
+                </select>
+                <div id="tabla-entregas-render" style="margin-top: 15px;"></div>
+            </div>
+        </main>
+
+    </div>
+</div>
     <!-- BLOQUE GLOBAL: INTERFAZ COMPLETA DEL ALUMNO -->
     <div id="section-alumno" class="hidden container-alumno">
         <!-- Encabezado Solicitado Obligatorio -->
