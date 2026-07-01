@@ -216,3 +216,58 @@ hr { border: 0; border-top: 1px solid var(--border-color); margin: 16px 0; }
     background-color: #f1f5f9; /* Color gris suave al pasar el mouse */
     color: var(--primary);
 }
+/* DISEÑO DEL PANEL DE LA PROFESORA EN DOS COLUMNAS */
+.main-grid-profesora {
+    display: grid;
+    grid-template-columns: 340px 1fr; /* Columna fija a la izquierda de 340px, el resto al centro/derecha */
+    gap: 20px;
+    padding: 20px;
+    align-items: start;
+}
+
+/* Ajustes para pantallas chicas/celulares */
+@media (max-width: 900px) {
+    .main-grid-profesora {
+        grid-template-columns: 1fr; /* Se transforma en una sola columna en móviles */
+    }
+}
+
+/* Lista visual de botones horizontales para los cursos */
+.lista-horizontal-cursos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.item-curso-nodo {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+/* Contenedor adaptativo de Alumnos */
+.lista-items-admin-alumnos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+/* Fila de acción para alumnos o cursos */
+.item-lista-accion {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
