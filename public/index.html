@@ -12,16 +12,19 @@
 <body>
 
     <!-- BLOQUE GLOBAL: LOGIN ACCESIBLE -->
-    <div id="section-login" class="container-auth">
+  <div id="section-login" class="container-auth">
         <div class="card login-box">
             <h2>Acceso al Aula de Matemática</h2>
-            <form id="login-form">
+            <form id="login-form" autocomplete="off">
                 <label>Usuario</label>
-                <input type="text" id="login-username" placeholder="Ingresa tu usuario asignado" required>
+                <div style="position: relative;">
+                    <input type="text" id="login-username" placeholder="Ingresa tu usuario asignado" required oninput="filtrarUsuariosLogin(this.value)">
+                    <div id="login-sugerencias" class="hidden lista-sugerencias-login"></div>
+                </div>
                 
                 <label>Contraseña</label>
                 <div class="password-container">
-                    <input type="password" id="login-password" placeholder="Ingresa tu contraseña" required>
+                    <input type="password" id="login-password" value="usuario" required>
                     <button type="button" id="btn-toggle-pwd" class="btn-eye">👁️</button>
                 </div>
                 
