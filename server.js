@@ -112,7 +112,7 @@ app.post('/api/sistema/restaurar', express.json({limit: '100mb'}), async (req, r
     const cursosInput = req.body.cursos || [];
     const alumnosInput = req.body.usuarios || req.body.alumnos || [];
     const recursosInput = req.body.tareas || req.body.recursos || [];
-    
+});
     try {
         // Limpiamos la base de datos para la nueva carga limpia
         await pool.query('TRUNCATE asignaciones, tareas, usuarios, fechas_importantes, cursos RESTART IDENTITY CASCADE');
