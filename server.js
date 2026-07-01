@@ -1,37 +1,34 @@
 /**
  * SERVIDOR CENTRAL - AULA VIRTUAL DE MATEMÁTICAS
- * Configurado para Render (Efemero), Neon (PostgreSQL Persistente), 
- * Cloudinary (Archivos multimedia) y Google Gemini AI.
  */
-require('dotenv').config();
+require('dotenv').config(); // <-- Esto SIEMPRE debe ser la línea 1 activa
 const express = require('express');
 const { Pool } = require('pg');
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const session = require('express-session');
-const { GoogleGenerativeAI } = require('@google/generative-ai'); // <-- Cambiado
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const path = require('path');
 
 const app = express();
 
-// --- CONFIGURACIÓN DE MIDDLEWARES ---
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+// --- CONFIGURACIÓN CONTROLADA DE CONEXIÓN A NEON ---
+const urlConexion = process.env.DATABASE_URL;
 
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'secreto_seguro_matematica_2026',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 1 día
-}));
+if (!urlConexion) {
+    console.error("❌ CRÍTICO: La variable DATABASE_URL no está llegando al código. Revisar Render Environment.");
+} else {
+    console.log("📌 DATABASE_URL detectada correctamente. Conectando a Neon...");
+}
 
-// --- CONFIGURACIÓN DE RESPALDO Y PERSISTENCIA (NEON Y CLOUDINARY) ---
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: urlConexion,
     ssl: { rejectUnauthorized: false }
 });
+// --------------------------------------------------
+
+// ... (Todo el resto del archivo se queda exactamente igual)
 
 cloudinary.config({
     cloudinary_url: process.env.CLOUDINARY_URL
