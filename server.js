@@ -186,42 +186,107 @@ app.delete('/api/cursos/:id', async (req, res) => {
 // =========================================================================
 // --- GESTIÓN DE ALUMNIOS (NUEVO: EDITAR Y CONTROL INDIVIDUAL) ---
 // =========================================================================
+// =========================================================================
+// 👥 ENDPOINTS DE GESTIÓN DE USUARIOS / ALUMNOS
+// =========================================================================
+
+// --- Obtener listado global de usuarios (Para predicción en Login) ---
 app.get('/api/usuarios', async (req, res) => {
     try {
-        const resultado = await pool.query('SELECT id, username, rol, curso_id, debe_cambiar_clave FROM usuarios ORDER BY username ASC');
+        const resultado = await pool.query('SELECT id, username, rol, curso_id FROM usuarios ORDER BY username ASC');
         res.json(resultado.rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) {
+        console.error("Error al obtener usuarios:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
+// --- Registrar un nuevo alumno ---
 app.post('/api/usuarios', async (req, res) => {
-    const { username, password, rol, curso_id } = req.body;
+    let { username, password, rol, curso_id } = req.body;
     try {
-        const limpioCursoId = (curso_id && !isNaN(parseInt(curso_id))) ? parseInt(curso_id) : null;
-        const resultado = await pool.query(
+        if (!username || username.trim() === "") {
+            return res.status(400).json({ success: false, error: "El nombre de usuario es obligatorio." });
+        }
+
+        // Sanitización para evitar fallos de integridad por curso nulo o indefinido
+        let idCurso = null;
+        if (curso_id && curso_id !== "null" && curso_id !== "") {
+            idCurso = parseInt(curso_id);
+        }
+
+        // Insertar en la base de datos con contraseña inicial y flag para forzar cambio
+        const nuevoUsuario = await pool.query(
             `INSERT INTO usuarios (username, password, rol, curso_id, debe_cambiar_clave) 
              VALUES ($1, $2, $3, $4, true) RETURNING id, username`,
-            [username.trim(), password, rol || 'alumno', limpioCursoId]
+            [username.trim(), password || 'usuario', rol || 'alumno', idCurso]
         );
-        res.status(201).json({ success: true, id: resultado.rows[0].id });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+
+        // Opcional: Si se asigna a un curso, vincular automáticamente las tareas existentes de ese curso
+        if (idCurso) {
+            const tareasCurso = await pool.query('SELECT tarea_id FROM curso_tareas WHERE curso_id = $1', [idCurso]);
+            for (let t of tareasCurso.rows) {
+                await pool.query(
+                    `INSERT INTO asignaciones (alumno_id, tarea_id, excluido, entregado, completada, visto) 
+                     VALUES ($1, $2, false, false, false, false) 
+                     ON CONFLICT DO NOTHING`,
+                    [nuevoUsuario.rows[0].id, t.tarea_id]
+                );
+            }
+        }
+
+        res.status(201).json({ success: true, usuario: nuevoUsuario.rows[0] });
+    } catch (err) {
+        console.error("Error al crear usuario:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
+// --- Editar nombre o curso de un alumno existente ---
 app.put('/api/usuarios/:id', async (req, res) => {
-    const { username, curso_id } = req.body;
+    const { id } = req.params;
+    let { username, curso_id } = req.body;
     try {
-        const limpioCursoId = (curso_id && !isNaN(parseInt(curso_id))) ? parseInt(curso_id) : null;
-        await pool.query('UPDATE usuarios SET username = $1, curso_id = $2 WHERE id = $3', [username.trim(), limpioCursoId, req.params.id]);
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+        if (!username || username.trim() === "") {
+            return res.status(400).json({ success: false, error: "El nombre no puede estar vacío." });
+        }
+
+        let idCurso = null;
+        if (curso_id && curso_id !== "null" && curso_id !== "") {
+            idCurso = parseInt(curso_id);
+        }
+
+        const resultado = await pool.query(
+            'UPDATE usuarios SET username = $1, curso_id = $2 WHERE id = $3 RETURNING *',
+            [username.trim(), idCurso, id]
+        );
+
+        if (resultado.rowCount === 0) {
+            return res.status(404).json({ success: false, error: "El alumno especificado no existe." });
+        }
+
+        res.json({ success: true, message: "Datos del estudiante actualizados.", alumno: resultado.rows[0] });
+    } catch (err) {
+        console.error("Error al editar usuario:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
+// --- Eliminar un alumno de forma permanente ---
 app.delete('/api/usuarios/:id', async (req, res) => {
+    const { id } = req.params;
     try {
-        await pool.query('DELETE FROM usuarios WHERE id = $1', [req.params.id]);
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+        // Al eliminar el usuario, las cascadas de la BD se encargan de limpiar asignaciones
+        const resultado = await pool.query('DELETE FROM usuarios WHERE id = $1', [id]);
+        if (resultado.rowCount === 0) {
+            return res.status(404).json({ success: false, error: "Usuario no encontrado." });
+        }
+        res.json({ success: true, message: "Estudiante dado de baja del sistema correctamente." });
+    } catch (err) {
+        console.error("Error al eliminar usuario:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
-
 // =========================================================================
 // --- BANCO DE TAREAS (NUEVO: EDITAR TAREAS EXISTENTES Y PRERREQUISITOS CORREGIDOS) ---
 // =========================================================================
