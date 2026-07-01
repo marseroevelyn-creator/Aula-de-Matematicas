@@ -7,107 +7,110 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
 
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 text-center">
-            <div class="flex justify-center mb-4 text-blue-600">
-                <i data-lucide="calculator" class="w-16 h-16"></i>
+        <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-slate-100 text-center">
+            <div class="inline-flex p-4 bg-blue-50 rounded-2xl text-blue-600 mb-4">
+                <i data-lucide="calculator" class="w-12 h-12"></i>
             </div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-6">Aula Virtual</h1>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-6">Aula Virtual</h1>
             
             <form id="form-login" class="space-y-4 text-left">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Tu Nombre Completo:</label>
-                    <input type="text" id="login-nombre" placeholder="Escribí tu nombre..." class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                <div class="relative">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Tu Nombre Completo:</label>
+                    <input type="text" id="login-nombre" autocomplete="off" placeholder="Escribí tu nombre..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
+                    <div id="predictivo-box" class="absolute left-0 right-0 bg-white border border-slate-200 mt-1 rounded-xl shadow-lg hidden z-50 overflow-hidden"></div>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Tu Contraseña:</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Tu Contraseña:</label>
                     <div class="relative">
-                        <input type="password" id="login-clave" placeholder="Contraseña" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition">
-                        <button type="button" onclick="togglePassword('login-clave')" class="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600">
+                        <input type="password" id="login-clave" placeholder="Contraseña" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
+                        <button type="button" onclick="togglePassword('login-clave')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
                             <i data-lucide="eye" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition duration-200">Ingresar al Aula</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-md transition duration-150">Ingresar al Aula</button>
             </form>
-            <button onclick="switchView('view-login-docente')" class="mt-6 text-sm text-gray-500 hover:text-blue-600 inline-flex items-center gap-2 font-medium">
-                <i data-lucide="shield-alert" class="w-4 h-4"></i> Acceso Panel Docente
+            <button onclick="switchView('view-login-docente')" class="mt-6 text-xs font-semibold text-slate-400 hover:text-blue-600 inline-flex items-center gap-1.5 transition">
+                <i data-lucide="shield-check" class="w-4 h-4"></i> Acceso Panel Docente
             </button>
         </div>
     </div>
 
     <div id="view-login-docente" class="hidden min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 text-center">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">Panel Docente</h2>
+        <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-slate-100 text-center">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">Panel Docente</h2>
             <form id="form-login-docente" class="space-y-4 text-left">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Contraseña Docente</label>
-                    <input type="password" id="docente-clave" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Contraseña Docente</label>
+                    <input type="password" id="docente-clave" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg">Ingresar</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md">Ingresar</button>
             </form>
         </div>
     </div>
 
     <div id="view-primer-ingreso" class="hidden min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border border-amber-100 text-center">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Primer Ingreso</h2>
-            <p class="text-sm text-gray-600 mb-6">Por seguridad debés cambiar tu contraseña genérica.</p>
+        <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm border border-amber-100 text-center">
+            <h2 class="text-2xl font-extrabold text-slate-900 mb-2">Primer Ingreso</h2>
+            <p class="text-xs text-slate-500 mb-6">Por seguridad debés cambiar tu contraseña genérica.</p>
             <form id="form-primer-ingreso" class="space-y-4">
-                <input type="password" id="nueva-clave" placeholder="Nueva contraseña (mínimo 4 dígitos)" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none text-center" minlength="4" required>
-                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-lg">Guardar y Entrar</button>
+                <input type="password" id="nueva-clave" placeholder="Nueva contraseña (mínimo 4 dígitos)" class="w-full px-4 py-3 rounded-xl border border-amber-200 focus:ring-2 focus:ring-amber-500 outline-none text-center font-semibold tracking-widest text-sm" minlength="4" required>
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-md">Guardar y Entrar</button>
             </form>
         </div>
     </div>
 
     <div id="view-docente" class="hidden min-h-screen p-4 md:p-8">
-        <header class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <header class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2"><i data-lucide="layout-dashboard" class="text-blue-600"></i> Panel de Control Docente</h1>
-                <p class="text-sm text-gray-500">Aula virtual de Matemática | Gestión de grupos y contenidos</p>
+                <h1 class="text-2xl font-black text-slate-900 flex items-center gap-2"><i data-lucide="layout-dashboard" class="text-blue-600"></i> Panel de Control Docente</h1>
+                <p class="text-xs text-slate-400 font-medium">Aula virtual de Matemática | Gestión de grupos y contenidos</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <button onclick="exportarBackup()" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium inline-flex items-center gap-1"><i data-lucide="download" class="w-4 h-4"></i> Exportar Copia JSON</button>
-                <button onclick="logout()" class="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium inline-flex items-center gap-1"><i data-lucide="log-out" class="w-4 h-4"></i> Salir</button>
+                <button onclick="exportarBackup()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition"><i data-lucide="download" class="w-4 h-4"></i> Exportar Copia JSON</button>
+                <button onclick="logout()" class="px-3.5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition"><i data-lucide="log-out" class="w-4 h-4"></i> Salir</button>
             </div>
         </header>
 
         <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-8">
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2"><i data-lucide="graduation-cap" class="text-blue-600"></i> Mis Cursos Activos</h2>
-                    <div id="lista-cursos" class="flex flex-wrap gap-2">
-                        </div>
+            <div class="lg:col-span-2 space-y-6">
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2"><i data-lucide="folder-open" class="text-blue-600 w-4 h-4"></i> Mis Cursos Activos</h2>
+                    <div id="lista-cursos" class="flex flex-wrap gap-2"></div>
                 </section>
 
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2"><i data-lucide="users" class="text-blue-600"></i> Alumnos inscritos</h2>
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2"><i data-lucide="users" class="text-blue-600 w-4 h-4"></i> Alumnos Inscritos</h2>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
+                        <table class="w-full text-left text-xs">
                             <thead>
-                                <tr class="border-b border-gray-100 text-gray-400 font-medium">
+                                <tr class="border-b border-slate-100 text-slate-400 font-bold uppercase">
                                     <th class="pb-3">Nombre Alumno</th>
                                     <th class="pb-3">Progreso</th>
                                     <th class="pb-3 text-right">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabla-alumnos">
-                                </tbody>
+                            <tbody id="tabla-alumnos" class="divide-y divide-slate-50"></tbody>
                         </table>
                     </div>
                 </section>
             </div>
 
-            <div class="space-y-8">
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="space-y-6">
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2"><i data-lucide="calendar" class="text-blue-600 w-4 h-4"></i> Fechas Clave</h2>
+                    <div class="p-4 bg-slate-50 rounded-xl text-xs text-slate-500 font-medium" id="docente-fechas-box">No hay fechas importantes agendadas.</div>
+                </section>
+
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold flex items-center gap-2"><i data-lucide="folder-heart" class="text-blue-600"></i> Banco Global de Recursos</h2>
-                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">+ Crear Tarea</button>
+                        <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><i data-lucide="archive" class="text-blue-600 w-4 h-4"></i> Banco de Recursos</h2>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-xl text-[11px] font-bold shadow-sm transition">+ Crear Tarea</button>
                     </div>
-                    <div id="banco-tareas" class="space-y-3">
-                        </div>
+                    <div id="banco-tareas" class="space-y-2"></div>
                 </section>
             </div>
         </main>
@@ -117,48 +120,49 @@
         <header class="bg-blue-600 text-white p-6 shadow-md">
             <div class="max-w-7xl mx-auto flex justify-between items-center">
                 <div>
-                    <h1 class="text-2xl font-bold" id="alumno-header-titulo">Mi Aula Virtual</h1>
-                    <p class="text-sm opacity-90" id="alumno-header-subtitulo">Estudiante: Carga... | Curso: Carga...</p>
+                    <h1 class="text-2xl font-black tracking-tight" id="header-alumno-titulo">Mi Aula Virtual</h1>
+                    <p class="text-xs font-medium opacity-85 mt-0.5" id="header-alumno-subtitulo">Cargando datos del alumno...</p>
                 </div>
-                <button onclick="logout()" class="bg-white text-blue-600 font-bold px-4 py-2 rounded-xl text-sm shadow hover:bg-blue-50 transition">Salir</button>
+                <button onclick="logout()" class="bg-white text-blue-600 font-bold px-4 py-2 rounded-xl text-xs shadow hover:bg-blue-50 transition">Salir</button>
             </div>
         </header>
 
-        <div class="max-w-7xl mx-auto w-full flex-1 grid grid-cols-1 md:grid-cols-4 gap-6 p-4 md:p-8">
-            <aside class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 h-fit space-y-2">
-                <h3 class="font-bold text-gray-400 text-xs tracking-wider uppercase mb-3 px-2">Temas de la Materia</h3>
-                <nav id="alumno-indice-temas" class="space-y-1">
-                    </nav>
+        <div class="max-w-7xl mx-auto w-full flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 p-4 md:p-8">
+            <aside class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 h-fit space-y-1">
+                <h3 class="font-bold text-slate-400 text-[10px] tracking-wider uppercase mb-3 px-2">Temas de la Materia</h3>
+                <nav id="alumno-indice-temas" class="space-y-0.5"></nav>
             </aside>
 
-            <main class="md:col-span-3 space-y-6">
-                <section class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-6 rounded-2xl shadow-sm">
+            <main class="lg:col-span-3 space-y-6">
+                <section class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100/70 p-6 rounded-2xl shadow-sm">
                     <div class="flex items-center justify-between mb-2">
-                        <h2 class="text-base font-bold text-blue-900 flex items-center gap-2"><i data-lucide="sparkles" class="text-blue-500"></i> Consultar a Gemini AI</h2>
-                        <span class="bg-blue-200 text-blue-800 text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full">Tutor de Matemática</span>
+                        <h2 class="text-sm font-bold text-blue-950 flex items-center gap-1.5"><i data-lucide="sparkles" class="text-indigo-500 w-4 h-4"></i> Consultar a Gemini AI</h2>
+                        <span class="bg-blue-200/60 text-blue-900 text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full tracking-wider">Tutor de Matemática</span>
                     </div>
                     <p class="text-xs text-blue-700 mb-4">¿Tenés dudas con una ecuación, teoría o querés verificar tu procedimiento? Preguntale a la IA:</p>
                     <div class="flex gap-2">
-                        <input type="text" id="input-gemini" placeholder="Escribí tu duda matemática acá..." class="flex-1 px-4 py-3 rounded-xl border border-blue-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
-                        <button onclick="consultarGemini()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-xl shadow-md flex items-center justify-center transition"><i data-lucide="send" class="w-5 h-5"></i></button>
+                        <input type="text" id="input-gemini" placeholder="Escribí tu duda matemática acá..." class="flex-1 px-4 py-3 rounded-xl border border-blue-200/60 focus:ring-2 focus:ring-blue-500 outline-none text-xs bg-white">
+                        <button onclick="consultarIA()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-xl shadow shadow-blue-200 flex items-center justify-center transition"><i data-lucide="send" class="w-4 h-4"></i></button>
                     </div>
-                    <div id="respuesta-gemini" class="mt-4 p-4 bg-white rounded-xl border border-blue-100 text-sm hidden max-h-48 overflow-y-auto whitespace-pre-line text-gray-700"></div>
+                    <div id="respuesta-gemini" class="mt-4 p-4 bg-white rounded-xl border border-blue-100/50 text-xs hidden max-h-48 overflow-y-auto whitespace-pre-line text-slate-700 leading-relaxed shadow-sm"></div>
                 </section>
 
                 <section class="space-y-4">
-                    <h2 class="text-lg font-bold flex items-center gap-2 text-gray-900"><i data-lucide="list-todo" class="text-blue-600"></i> Tus Actividades Asignadas</h2>
-                    <div id="contenedor-actividades-alumno" class="space-y-4">
-                        </div>
+                    <h2 class="text-base font-bold flex items-center gap-2 text-slate-900"><i data-lucide="check-square" class="text-blue-600 w-5 h-5"></i> Actividades Programadas</h2>
+                    <div id="alumno-actividades-box" class="space-y-3"></div>
                 </section>
             </main>
         </div>
     </div>
 
     <script>
-        // Inicializar los iconos de Lucide al cargar
-        document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
+        let alumnoSeleccionadoId = null;
 
-        // Gestión Global de Vistas de la Single Page Application (SPA)
+        document.addEventListener('DOMContentLoaded', () => { 
+            lucide.createIcons(); 
+            initPredictivo();
+        });
+
         function switchView(viewId) {
             ['view-login', 'view-login-docente', 'view-primer-ingreso', 'view-docente', 'view-alumno'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
@@ -166,202 +170,182 @@
             document.getElementById(viewId).classList.remove('hidden');
         }
 
-        // Mostrar u ocultar la clave (Función Ojo)
-        function togglePassword(inputId) {
-            const input = document.getElementById(inputId);
-            input.type = input.type === 'password' ? 'text' : 'password';
+        function togglePassword(id) {
+            const el = document.getElementById(id);
+            el.type = el.type === 'password' ? 'text' : 'password';
         }
 
-        // Envío de Formulario de Autenticación Principal
+        // Bloque del Buscador Predictivo de Alumnos
+        function initPredictivo() {
+            const input = document.getElementById('login-nombre');
+            const box = document.getElementById('predictivo-box');
+
+            input.addEventListener('input', async () => {
+                const val = input.value.trim();
+                if (val.length < 1) { box.classList.add('hidden'); return; }
+
+                const res = await fetch(`/api/auth/buscar-alumnos?q=${encodeURIComponent(val)}`);
+                const rows = await res.json();
+
+                if(rows.length > 0) {
+                    box.innerHTML = '';
+                    box.classList.remove('hidden');
+                    rows.forEach(r => {
+                        const item = document.createElement('div');
+                        item.className = "px-4 py-2.5 text-xs hover:bg-slate-50 cursor-pointer font-medium text-slate-700 transition";
+                        item.innerText = `${r.nombre} (${r.curso_nombre})`;
+                        item.addEventListener('click', () => {
+                            input.value = r.nombre;
+                            alumnoSeleccionadoId = r.id;
+                            box.classList.add('hidden');
+                        });
+                        box.appendChild(item);
+                    });
+                } else { box.classList.add('hidden'); }
+            });
+        }
+
+        // Bloque de Envíos de Formularios de Acceso
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const nombre = document.getElementById('login-nombre').value;
             const contrasena = document.getElementById('login-clave').value;
+            if(!alumnoSeleccionadoId) return alert("Por favor, selecciona tu usuario de la lista desplegable.");
 
-            const res = await fetch('/api/login', {
+            const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre, contrasena, esDocente: false })
+                body: JSON.stringify({ id: alumnoSeleccionadoId, contrasena, esDocente: false })
             });
-            const data = await res.json();
-
-            if (res.ok) {
-                if (data.primerIngreso) {
-                    switchView('view-primer-ingreso');
-                } else {
-                    switchView('view-alumno');
-                    cargarPanelAlumno();
-                }
-            } else {
-                alert(data.error);
-            }
+            const d = await res.json();
+            if(res.ok) {
+                if(d.primerIngreso) switchView('view-primer-ingreso');
+                else { switchView('view-alumno'); cargarAlumnoWorkspace(); }
+            } else alert(d.error);
         });
 
-        // Autenticación de Profesora
         document.getElementById('form-login-docente').addEventListener('submit', async (e) => {
             e.preventDefault();
             const contrasena = document.getElementById('docente-clave').value;
-
-            const res = await fetch('/api/login', {
+            const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ esDocente: true, contrasena })
+                body: JSON.stringify({ contrasena, esDocente: true })
             });
-            const data = await res.json();
-
-            if (res.ok) {
-                switchView('view-docente');
-                cargarDashboardDocente();
-            } else {
-                alert(data.error);
-            }
+            if(res.ok) { switchView('view-docente'); cargarDocenteDashboard(); }
+            else alert("Clave docente inválida.");
         });
 
-        // Cambio de Contraseña de Alumno Requerido
         document.getElementById('form-primer-ingreso').addEventListener('submit', async (e) => {
             e.preventDefault();
             const nuevaClave = document.getElementById('nueva-clave').value;
-
-            const res = await fetch('/api/alumno/cambiar-clave', {
+            const res = await fetch('/api/auth/primer-ingreso', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ nuevaClave })
             });
-
-            if (res.ok) {
-                switchView('view-alumno');
-                cargarPanelAlumno();
-            } else {
-                const data = await res.json();
-                alert(data.error);
-            }
+            if(res.ok) { switchView('view-alumno'); cargarAlumnoWorkspace(); }
+            else alert("Error al registrar contraseña.");
         });
 
-        // Interacción Directa con la API de Inteligencia Artificial Gemini
-        async function consultarGemini() {
-            const dudaInput = document.getElementById('input-gemini');
-            const respuestaDiv = document.getElementById('respuesta-gemini');
-            const duda = dudaInput.value.trim();
+        // Bloque del Conector en Tiempo Real de Inteligencia Artificial Gemini
+        async function consultarIA() {
+            const inp = document.getElementById('input-gemini');
+            const resBox = document.getElementById('respuesta-gemini');
+            if(!inp.value.trim()) return;
 
-            if(!duda) return;
-            respuestaDiv.classList.remove('hidden');
-            respuestaDiv.innerText = "Pensando una explicación matemática clara para vos...";
+            resBox.classList.remove('hidden');
+            resBox.innerText = "Pensando una explicación matemática clara para vos...";
 
             const res = await fetch('/api/gemini/consultar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ duda })
+                body: JSON.stringify({ duda: inp.value.trim() })
             });
-            const data = await res.json();
-            
-            if(res.ok) {
-                respuestaDiv.innerText = data.respuesta;
-            } else {
-                respuestaDiv.innerText = "Ocurrió un inconveniente al consultar con la IA.";
-            }
-            dudaInput.value = "";
+            const d = await res.json();
+            resBox.innerText = res.ok ? d.respuesta : "Inconvenientes al comunicar con el tutor IA.";
+            inp.value = '';
         }
 
-        // Carga y renderizado dinámico de la interfaz del Alumno
-        async function cargarPanelAlumno() {
-            const res = await fetch('/api/alumno/tareas');
-            const tareas = await res.json();
+        // Renderizador Dinámico de Datos del Alumno
+        async function cargarAlumnoWorkspace() {
+            const res = await fetch('/api/alumno/dashboard');
+            const d = await res.json();
 
-            const contenedor = document.getElementById('contenedor-actividades-alumno');
-            const indiceNav = document.getElementById('alumno-indice-temas');
-            contenedor.innerHTML = "";
-            indiceNav.innerHTML = "";
+            document.getElementById('header-alumno-subtitulo').innerText = `Estudiante: ${d.curso.fechas_importantes ? 'Activo' : ''} | Curso: ${d.curso.nombre}`;
+            
+            const contActividades = document.getElementById('alumno-actividades-box');
+            const contIndice = document.getElementById('alumno-indice-temas');
+            contActividades.innerHTML = ''; contIndice.innerHTML = '';
 
-            const temasUnicos = new Set();
-
-            tareas.forEach(tarea => {
-                temasUnicos.add(tarea.tema);
-
-                const card = document.createElement('div');
-                card.className = `p-5 rounded-2xl border bg-white transition shadow-sm ${tarea.realizada ? 'opacity-65 border-gray-100' : 'border-blue-100 ring-1 ring-blue-50'}`;
+            const temas = new Set();
+            d.tareas.forEach(t => {
+                temas.add(t.tema);
+                const bloque = document.createElement('div');
+                bloque.className = `p-4 rounded-2xl border transition text-xs ${t.completada ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-blue-100 ring-1 ring-blue-50/30'}`;
                 
-                card.innerHTML = `
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                // Mostrar alerta para videos en el aula
+                const alertVideo = t.tipo_recurso === 'video' ? `onclick="alert('Recuerda usar auriculares si estás en el salón de clases')" ` : '';
+
+                bloque.innerHTML = `
+                    <div class="flex justify-between items-start gap-4">
                         <div>
-                            <span class="text-[10px] bg-gray-100 font-bold px-2 py-1 rounded text-gray-500 uppercase">${tarea.tema}</span>
-                            <h3 class="font-bold text-gray-900 mt-1">${tarea.titulo}</h3>
-                            <p class="text-xs text-gray-400 mt-1">Fecha límite: ${new Date(tarea.fecha_entrega).toLocaleDateString()}</p>
+                            <span class="text-[9px] bg-slate-100 font-bold px-2 py-0.5 rounded text-slate-500 uppercase">${t.tema}</span>
+                            <h4 class="font-bold text-slate-900 mt-1 text-sm">${t.titulo}</h4>
+                            <p class="text-slate-400 mt-0.5">Límite: ${new Date(t.fecha_entrega).toLocaleDateString()}</p>
                         </div>
                         <div>
-                            ${tarea.realizada ? 
-                                `<span class="text-green-600 bg-green-50 text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i> Terminada</span>` : 
-                                `<button class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition">Marcar como Hecha</button>`
-                            }
+                            ${t.completada ? '<span class="text-green-600 bg-green-50 font-bold px-2.5 py-1 rounded-lg">✓ Terminado</span>' : 
+                            `<button ${alertVideo}onclick="marcarCompletada(${t.tarea_id}, ${t.tipo_recurso === 'video'})" class="bg-blue-600 text-white font-bold px-3 py-1.5 rounded-xl">Terminar</button>`}
                         </div>
                     </div>
                 `;
-                contenedor.appendChild(card);
+                contActividades.appendChild(bloque);
             });
 
-            // Llenar el índice lateral interactivo para los alumnos
-            temasUnicos.forEach(tema => {
-                const link = document.createElement('a');
-                link.href = "#";
-                link.className = "block px-3 py-2 text-sm font-medium rounded-xl text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition";
-                link.innerText = tema;
-                indiceNav.appendChild(link);
+            temas.forEach(tema => {
+                contIndice.innerHTML += `<a href="#" class="block px-3 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">${tema}</a>`;
             });
-
             lucide.createIcons();
         }
 
-        // Cargar los Datos de Gestión de la Profesora
-        async function cargarDashboardDocente() {
-            const res = await fetch('/api/docente/dashboard');
-            const data = await res.json();
+        async function marcarCompletada(id, esVideo) {
+            await fetch('/api/alumno/completar-tarea', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tarea_id: id, visto: esVideo })
+            });
+            cargarAlumnoWorkspace();
+        }
 
-            // Renderizar cursos en la interfaz docente
-            const contenedorCursos = document.getElementById('lista-cursos');
-            contenedorCursos.innerHTML = "";
-            data.cursos.forEach(c => {
-                contenedorCursos.innerHTML += `
-                    <button class="px-4 py-2 bg-blue-50 text-blue-700 border border-blue-100 font-bold rounded-xl text-sm hover:bg-blue-100 transition inline-flex items-center gap-1">
-                        ${c.nombre} <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                    </button>
-                `;
+        // Renderizador del Panel de la Profesora
+        async function cargarDocenteDashboard() {
+            const res = await fetch('/api/docente/dashboard');
+            const d = await res.json();
+
+            const cBox = document.getElementById('lista-cursos');
+            cBox.innerHTML = '';
+            d.cursos.forEach(c => {
+                cBox.innerHTML += `<button class="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 font-bold rounded-xl text-xs flex items-center gap-1">${c.nombre} <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>`;
             });
 
-            // Renderizar alumnos inscritos
-            const tablaAlumnos = document.getElementById('tabla-alumnos');
-            tablaAlumnos.innerHTML = "";
-            data.alumnos.forEach(a => {
-                tablaAlumnos.innerHTML += `
-                    <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition">
-                        <td class="py-3.5 font-medium text-gray-900">${a.nombre} <span class="text-xs text-gray-400 font-normal">(${a.curso_nombre})</span></td>
-                        <td class="py-3.5 text-blue-600 font-bold">0%</td>
-                        <td class="py-3.5 text-right space-x-1">
-                            <button class="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-xs rounded-lg shadow-sm">Gestionar</button>
-                            <button onclick="reiniciarClave(${a.id})" class="px-2 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg" title="Reiniciar Clave"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i></button>
+            const tAlumnos = document.getElementById('tabla-alumnos');
+            tAlumnos.innerHTML = '';
+            d.alumnos.forEach(a => {
+                tAlumnos.innerHTML += `
+                    <tr>
+                        <td class="py-3 font-semibold text-slate-900">${a.nombre} <span class="text-slate-400 font-normal">(${a.curso_nombre})</span></td>
+                        <td class="py-3 font-bold text-blue-600">0%</td>
+                        <td class="py-3 text-right">
+                            <button class="px-2.5 py-1 bg-cyan-600 text-white font-bold rounded-lg mr-1">Gestionar</button>
                         </td>
                     </tr>
                 `;
             });
-
             lucide.createIcons();
         }
 
-        // Reiniciar clave de alumno a los valores por defecto
-        async function reiniciarClave(id) {
-            if(confirm("¿Estás segura de reiniciar la clave de este alumno a 'usuario'?")) {
-                const res = await fetch(`/api/alumnos/${id}/reiniciar-clave`, { method: 'POST' });
-                if(res.ok) alert("Clave reiniciada con éxito.");
-            }
-        }
-
-        // Exportar Backup de Seguridad Total en JSON
-        async function exportarBackup() {
-            window.open('/api/docente/exportar', '_blank');
-        }
-
-        // Logout General
-        function logout() {
-            switchView('view-login');
-        }
+        function exportarBackup() { window.open('/api/docente/backup/exportar', '_blank'); }
+        function logout() { switchView('view-login'); alumnoSeleccionadoId = null; document.getElementById('login-nombre').value = ''; }
     </script>
 </body>
 </html>
