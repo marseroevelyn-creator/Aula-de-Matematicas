@@ -106,34 +106,36 @@ initDB().catch(console.error);
 
 
 // --- BLOQUE: AUTENTICACIÓN Y SEGURIDAD ---
-// --- FUNCIÓN DE RESTAURACIÓN COMPATIBLE Y ULTRA-RESISTENTE ---
-app.post('/api/sistema/restaurar', express.json({limit: '100mb'}), async (req, res) => {
-    const cursosInput = req.body.cursos || [];
-    const alumnosInput = req.body.usuarios || req.body.alumnos || [];
-    const recursosInput = req.body.tareas || req.body.recursos || [];
-    
+// --- RUTA DE RESTAURACIÓN DEPURADA Y DIRECTA ---
+app.post('/api/sistema/restaurar', async (req, res) => {
     try {
-        // Limpieza absoluta de tablas
+        const cursosInput = req.body.cursos || [];
+        const alumnosInput = req.body.usuarios || req.body.alumnos || [];
+        const recursosInput = req.body.tareas || req.body.recursos || [];
+        
+        console.log(`-> Iniciando restauración: ${cursosInput.length} cursos, ${alumnosInput.length} alumnos, ${recursosInput.length} tareas.`);
+
+        // Vaciar base de datos con cascada segura
         await pool.query('TRUNCATE asignaciones, tareas, usuarios, fechas_importantes, cursos RESTART IDENTITY CASCADE');
         
-        // Función auxiliar para estandarizar textos (quita tildes y espacios raros)
+        // Helper para normalizar textos y evitar errores de tildes/espacios
         const limpiarTexto = (t) => t ? t.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim() : "";
 
-        // 1. Insertar Cursos de forma limpia
+        // 1. Inyectar Cursos
         for (let c of cursosInput) {
             if (!c.nombre) continue;
             const whatsapp = c.whatsapp_link !== undefined ? c.whatsapp_link : (c.link_whatsapp || "");
             await pool.query('INSERT INTO cursos (nombre, whatsapp_link) VALUES ($1, $2)', [c.nombre.trim(), whatsapp.trim()]);
         }
 
-        // Crear mapa de cursos usando el texto limpio como clave
+        // Mapear los IDs generados por Neon
         const cursosDb = await pool.query('SELECT id, nombre FROM cursos');
         const mapaCursos = {};
         cursosDb.rows.forEach(row => { 
             mapaCursos[limpiarTexto(row.nombre)] = row.id; 
         });
 
-        // 2. Insertar Alumnos con validación de Curso
+        // 2. Inyectar Alumnos
         for (let u of alumnosInput) {
             const nombreUsuario = u.username || u.nombre;
             if (!nombreUsuario) continue;
@@ -141,7 +143,6 @@ app.post('/api/sistema/restaurar', express.json({limit: '100mb'}), async (req, r
             const passwordUsuario = u.password || u.contrasena || "usuario";
             const cursoOriginal = u.curso || "";
             const cursoId = mapaCursos[limpiarTexto(cursoOriginal)] || null;
-            
             const debeCambiar = u.debe_cambiar_clave !== undefined ? u.debe_cambiar_clave : (u.primer_ingreso == 1);
 
             await pool.query(
@@ -150,7 +151,7 @@ app.post('/api/sistema/restaurar', express.json({limit: '100mb'}), async (req, r
             );
         }
 
-        // 3. Insertar Tareas
+        // 3. Inyectar Tareas
         for (let r of recursosInput) {
             const titulo = r.titulo || "Tarea sin título";
             const descripcion = r.descripcion || "";
@@ -164,9 +165,11 @@ app.post('/api/sistema/restaurar', express.json({limit: '100mb'}), async (req, r
             );
         }
 
-        return res.json({ success: true, message: "¡Datos migrados y restaurados con éxito total!" });
+        console.log("-> ¡Restauración completada con éxito en Neon!");
+        return res.json({ success: true });
+
     } catch (err) {
-        console.error("Error detallado en restauración:", err);
+        console.error("Error crítico en restauración:", err);
         return res.status(500).json({ success: false, error: err.message });
     }
 });
