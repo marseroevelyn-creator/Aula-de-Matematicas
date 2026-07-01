@@ -116,19 +116,18 @@
                 
                 <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
                 
-                <h4>👤 Registrar Nuevo Alumno en este Curso</h4>
-                <div class="form-horizontal-alumno" style="display: flex; gap: 10px; align-items: flex-end; margin-top: 10px;">
-                    <div style="flex: 2;">
-                        <label>Nombre de Usuario</label>
-                        <input type="text" id="nuevo-alumno-username" placeholder="Ej: juan.perez" style="margin: 5px 0 0 0;">
-                    </div>
-                    <div style="flex: 1;">
-                        <label>Contraseña Inicial</label>
-                        <input type="password" id="nuevo-alumno-password" value="usuario" style="margin: 5px 0 0 0;">
-                    </div>
-                    <button onclick="cargarAlumnos()" class="btn-primary" style="height: 40px;">➕ Registrar</button>
+                <div class="card">
+                    <h3>👤 Registrar Nuevo Estudiante</h3>
+                    <form id="form-crear-alumno" autocomplete="off">
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div>
+                                <label style="font-weight: bold; font-size: 13px;">Nombre de Usuario / Nombre Completo:</label>
+                                <input type="text" id="nuevo-alumno-username" placeholder="Ej: juangomez" required style="width: 100%; margin-top: 5px;">
+                            </div>
+                            <button type="submit" class="btn-primary" style="margin-top: 5px;">Registrar Estudiante</button>
+                        </div>
+                    </form>
                 </div>
-            </div>
 
             <div class="card">
                 <h3>📥 Centro de Entregas y Evaluaciones</h3>
