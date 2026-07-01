@@ -1,273 +1,83 @@
-/* PALETA DE COLORES Y VARIABLES MODERNAS */
 :root {
-    --bg-main: #f8fafc;
+    --bg-main: #f1f5f9;
     --surface: #ffffff;
-    --text-main: #1e293b;
+    --text-main: #334155;
     --text-muted: #64748b;
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
+    --primary: #2563eb;
     --success: #10b981;
-    --success-hover: #059669;
     --danger: #ef4444;
-    --danger-hover: #dc2626;
-    --secondary: #475569;
-    --secondary-hover: #334155;
-    --info: #06b6d4;
-    --info-hover: #0891b2;
-    --border-color: #e2e8f0;
-    --radius: 8px;
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    --border: #cbd5e1;
+    --radius: 10px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body { 
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-    background-color: var(--bg-main); 
-    color: var(--text-main); 
-    line-height: 1.5;
-}
-
-.card { 
-    background: var(--surface); 
-    border-radius: var(--radius); 
-    padding: 24px; 
-    margin-bottom: 20px; 
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
-}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+body { background-color: var(--bg-main); color: var(--text-main); }
 
 .hidden { display: none !important; }
 
-/* LOGIN ACCESIBLE */
+/* CONTENEDOR DE AUTENTICACIÓN */
 .container-auth { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-.login-box { width: 100%; max-width: 420px; border-top: 5px solid var(--primary); }
-.password-container { display: flex; gap: 8px; margin-bottom: 15px; }
-.password-container input { flex: 1; margin: 0; }
-.btn-eye { background: #e2e8f0; border: none; padding: 10px; border-radius: var(--radius); cursor: pointer; }
+.login-box { width: 100%; max-width: 400px; padding: 30px; background: var(--surface); border-radius: var(--radius); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+.login-box h2 { text-align: center; margin-bottom: 25px; color: var(--primary); font-size: 28px; }
 
-/* CONTROL DE INPUTS GENERALES */
-input, select, textarea { 
-    width: 100%; 
-    padding: 10px 12px; 
-    margin: 8px 0 16px 0; 
-    border: 1px solid var(--border-color); 
-    border-radius: var(--radius); 
-    font-size: 14px; 
-    background-color: #ffffff;
-    color: var(--text-main);
-    transition: border-color 0.2s;
-}
-input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-}
-label { font-size: 13px; font-weight: 600; color: var(--secondary); display: block; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 5px; }
+input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; }
+input:focus { border-color: var(--primary); }
 
-/* BOTONES INTEGRADOS */
-button, .btn-whatsapp { 
-    padding: 10px 16px; 
-    border: none; 
-    border-radius: var(--radius); 
-    cursor: pointer; 
-    font-weight: 500; 
-    font-size: 14px; 
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-button:active { transform: scale(0.98); }
+.password-container { display: flex; gap: 5px; }
+.btn-eye { padding: 0 10px; background: #e2e8f0; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
 
-.btn-primary { background: var(--primary); color: white; }
-.btn-primary:hover { background: var(--primary-hover); }
+/* BUSCADOR PREDICTIVO FLOTANTE (PANTALLA 5 DEL PDF) */
+.lista-sugerencias-login { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--border); border-radius: 0 0 6px 6px; max-height: 150px; overflow-y: auto; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.sugerencia-item { padding: 10px; cursor: pointer; font-size: 14px; }
+.sugerencia-item:hover { background: #f1f5f9; color: var(--primary); }
 
-.btn-success { background: var(--success); color: white; width: 100%; }
-.btn-success:hover { background: var(--success-hover); }
+/* BOTONES GENERALES */
+.btn-primary-block { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+.btn-link { background: none; border: none; color: var(--text-muted); width: 100%; text-align: center; cursor: pointer; text-decoration: underline; font-size: 13px; }
+.btn-primary { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+.btn-success { background: var(--success); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+.btn-secondary { background: #64748b; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+.btn-danger-sm { background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
 
-.btn-danger { background: var(--danger); color: white; }
-.btn-danger:hover { background: var(--danger-hover); }
+/* DASHBOARD ESTRUCTURA */
+.container-dashboard { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+.dashboard-header, .dashboard-header-alumno { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--surface); padding: 20px; border-radius: var(--radius); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.select-curso-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding: 15px 20px; background: var(--surface); border-radius: var(--radius); }
+.select-curso-bar select { width: auto; min-width: 250px; }
 
-.btn-secondary { background: var(--secondary); color: white; }
-.btn-secondary:hover { background: var(--secondary-hover); }
+.layout-profesora { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+.card { background: var(--surface); padding: 20px; border-radius: var(--radius); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); margin-bottom: 20px; position: relative; }
+.card h3 { margin-bottom: 15px; font-size: 16px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
 
-.btn-info { background: var(--info); color: white; }
-.btn-info:hover { background: var(--info-hover); }
+/* TABLAS ESTILO BOCETOS (PANTALLA 4 Y 5) */
+.tabla-contenedor { overflow-x: auto; margin-top: 10px; }
+.tabla-datos { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+.tabla-datos th { background: #f8fafc; padding: 10px; font-weight: 600; border-bottom: 2px solid #e2e8f0; }
+.tabla-datos td { padding: 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.tabla-datos tr:hover { background: #f8fafc; }
 
-/* NAVBAR COMPONENT */
-.navbar { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    background: #0f172a; 
-    color: white; 
-    padding: 16px 32px;
-}
-.navbar h1 { font-size: 1.25rem; font-weight: 600; }
-.header-actions { display: flex; gap: 10px; }
+/* BANCO DE TAREAS Y RECURSOS */
+.banco-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.banco-grid { margin-top: 15px; display: flex; flex-direction: column; gap: 15px; }
+.carpeta-tema { border-left: 4px solid var(--primary); padding-left: 12px; margin-bottom: 10px; }
+.carpeta-tema h4 { font-size: 14px; margin-bottom: 8px; color: var(--primary); }
+.recurso-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
 
-/* GRID PRINCIPAL - PROFESORA */
-.main-grid { 
-    display: grid; 
-    grid-template-columns: 340px 1fr; 
-    gap: 24px; 
-    padding: 24px; 
-    max-width: 1600px; 
-    margin: 0 auto; 
-}
-.sidebar-prof { display: flex; flex-direction: column; gap: 10px; }
-.content-prof { display: flex; flex-direction: column; gap: 10px; }
+/* NODO MODAL FLOTANTE */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; z-index: 100; }
+.modal-card { background: white; padding: 25px; border-radius: var(--radius); width: 100%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+.modal-wide { max-width: 600px; }
+.modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
 
-h3 { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
-hr { border: 0; border-top: 1px solid var(--border-color); margin: 16px 0; }
+/* PANEL DE ALUMNO FEED Y TUTOR (PANTALLA 6) */
+.layout-alumno-body { display: grid; grid-template-columns: 250px 1fr; gap: 20px; }
+.sidebar-temas { background: var(--surface); padding: 20px; border-radius: var(--radius); min-height: 400px; }
+.feed-tareas { display: flex; flex-direction: column; gap: 20px; }
+.alerta-urgente { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 13px; }
 
-/* ELEMENTOS DINÁMICOS */
-.item-lista-accion { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    background: #f8fafc; 
-    padding: 10px 14px; 
-    border-radius: var(--radius); 
-    margin-bottom: 8px; 
-    border: 1px solid var(--border-color);
-}
-.item-lista-accion div button { padding: 4px 8px; font-size: 12px; }
-#tabla-entregas-render { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-#tabla-entregas-render .card { margin-bottom: 0; background: #fdfdfd; }
-
-/* ==========================================================================
-   ESTILOS DEL ALUMNO (CONSERVADOS PARA NO ALTERAR SU VISTA)
-   ========================================================================== */
-.student-header { background: linear-gradient(135deg, #2b6cb0, #1a202c); color: white; padding: 25px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }
-.fechas-caja { background: rgba(250,250,250,0.15); padding: 12px; border-radius: 8px; max-width: 350px; }
-.alerta-vencidas { background: #fff5f5; color: #c53030; padding: 10px; border-radius: 8px; border-left: 4px solid #c53030; font-weight: bold; margin-top: 10px; }
-.layout-alumno-body { display: flex; gap: 24px; padding: 24px; }
-.sidebar-temas { width: 260px; flex-shrink: 0; }
-.feed-tareas { flex: 1; display: flex; flex-direction: column; gap: 20px; }
-.item-tarea-alumno { border-left: 4px solid #2b6cb0; padding-left: 14px; margin-bottom: 20px; }
-.badge-vencido { background: #e53e3e; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-.badge-pendiente { background: #dd6b20; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-.badge-completado { background: #38a169; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-.btn-whatsapp { background: #2f855a; color: white; text-decoration: none; font-size: 14px; }
-.btn-whatsapp:hover { background: #22543d; }
-.gemini-container { background: #f7fafc; border: 1px solid #e2e8f0; }
-.chat-logs { height: 250px; overflow-y: auto; background: white; border: 1px solid #edf2f7; padding: 15px; border-radius: 8px; margin-bottom: 12px; }
-.chat-logs p { margin-bottom: 10px; padding: 8px 12px; border-radius: 6px; }
+.chat-logs { background: #f8fafc; border: 1px solid #e2e8f0; height: 200px; overflow-y: auto; padding: 15px; border-radius: 6px; margin-bottom: 10px; font-size: 13px; }
 .chat-input-row { display: flex; gap: 10px; }
-.chat-input-row input { margin: 0; flex: 1; }
-
-@media (max-width: 1024px) { 
-    .main-grid { grid-template-columns: 1fr; } 
-    .layout-alumno-body { flex-direction: column; } 
-    .navbar { flex-direction: column; gap: 12px; text-align: center; }
-}
-/* Corrección para que el contenedor de entregas no colapse feo si está vacío */
-#tabla-entregas-render { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-    gap: 16px; 
-    min-height: 100px; /* Le da una altura mínima para preservar el espacio */
-}
-
-/* Contenedor interno desplazable para las listas de alumnos/cursos si crecen mucho */
-.lista-items-admin {
-    max-height: 220px;
-    overflow-y: auto;
-    padding-right: 4px;
-    margin-top: 10px;
-}
-
-/* Estilo para la barra de desplazamiento interna */
-.lista-items-admin::-webkit-scrollbar {
-    width: 5px;
-}
-.lista-items-admin::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-}
-/* CAJA FLOTANTE DE SUGERENCIAS EN LOGIN */
-.lista-sugerencias-login {
-    position: absolute;
-    top: calc(100% - 10px); /* Justo debajo del input */
-    left: 0;
-    right: 0;
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    border-top: none;
-    border-radius: 0 0 var(--radius) var(--radius);
-    max-height: 160px;
-    overflow-y: auto;
-    z-index: 999;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
-}
-
-.sugerencia-item {
-    padding: 10px 14px;
-    font-size: 14px;
-    color: var(--text-main);
-    cursor: pointer;
-    transition: background 0.15s ease;
-    text-align: left;
-}
-
-.sugerencia-item:hover {
-    background-color: #f1f5f9; /* Color gris suave al pasar el mouse */
-    color: var(--primary);
-}
-/* DISEÑO DEL PANEL DE LA PROFESORA EN DOS COLUMNAS */
-.main-grid-profesora {
-    display: grid;
-    grid-template-columns: 340px 1fr; /* Columna fija a la izquierda de 340px, el resto al centro/derecha */
-    gap: 20px;
-    padding: 20px;
-    align-items: start;
-}
-
-/* Ajustes para pantallas chicas/celulares */
-@media (max-width: 900px) {
-    .main-grid-profesora {
-        grid-template-columns: 1fr; /* Se transforma en una sola columna en móviles */
-    }
-}
-
-/* Lista visual de botones horizontales para los cursos */
-.lista-horizontal-cursos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.item-curso-nodo {
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    padding: 8px 12px;
-    border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-}
-
-/* Contenedor adaptativo de Alumnos */
-.lista-items-admin-alumnos {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 12px;
-    max-height: 300px;
-    overflow-y: auto;
-    padding: 5px;
-}
-
-/* Fila de acción para alumnos o cursos */
-.item-lista-accion {
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    padding: 12px;
-    border-radius: var(--radius);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-}
+.subtext-ia { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
+.btn-whatsapp { background: #25d366; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 500; font-size: 14px; }
