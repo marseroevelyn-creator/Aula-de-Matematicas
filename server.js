@@ -106,46 +106,51 @@ initDB().catch(console.error);
 
 
 // --- BLOQUE: AUTENTICACIÓN Y SEGURIDAD ---
-// --- NUEVA FUNCIÓN DE RESTAURACIÓN COMPATIBLE CON TU ARCHIVO VIEJO ---
+// --- FUNCIÓN DE RESTAURACIÓN COMPATIBLE Y ULTRA-RESISTENTE ---
 app.post('/api/sistema/restaurar', express.json({limit: '100mb'}), async (req, res) => {
-    // Acepta tanto el formato nuevo como el formato antiguo que subiste
     const cursosInput = req.body.cursos || [];
     const alumnosInput = req.body.usuarios || req.body.alumnos || [];
     const recursosInput = req.body.tareas || req.body.recursos || [];
-});
+    
     try {
-        // Limpiamos la base de datos para la nueva carga limpia
+        // Limpieza absoluta de tablas
         await pool.query('TRUNCATE asignaciones, tareas, usuarios, fechas_importantes, cursos RESTART IDENTITY CASCADE');
         
-        // 1. Insertar los Cursos
+        // Función auxiliar para estandarizar textos (quita tildes y espacios raros)
+        const limpiarTexto = (t) => t ? t.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim() : "";
+
+        // 1. Insertar Cursos de forma limpia
         for (let c of cursosInput) {
-            // Si el archivo viejo no tiene link_whatsapp, le ponemos uno vacío por defecto
+            if (!c.nombre) continue;
             const whatsapp = c.whatsapp_link !== undefined ? c.whatsapp_link : (c.link_whatsapp || "");
-            await pool.query('INSERT INTO cursos (nombre, whatsapp_link) VALUES ($1, $2)', [c.nombre, whatsapp]);
+            await pool.query('INSERT INTO cursos (nombre, whatsapp_link) VALUES ($1, $2)', [c.nombre.trim(), whatsapp.trim()]);
         }
 
-        // Recuperamos los IDs reales que Neon les asignó a los cursos recién creados
+        // Crear mapa de cursos usando el texto limpio como clave
         const cursosDb = await pool.query('SELECT id, nombre FROM cursos');
         const mapaCursos = {};
-        cursosDb.rows.forEach(row => { mapaCursos[row.nombre.toUpperCase().trim()] = row.id; });
+        cursosDb.rows.forEach(row => { 
+            mapaCursos[limpiarTexto(row.nombre)] = row.id; 
+        });
 
-        // 2. Insertar los Alumnos (Usuarios)
+        // 2. Insertar Alumnos con validación de Curso
         for (let u of alumnosInput) {
             const nombreUsuario = u.username || u.nombre;
-            const passwordUsuario = u.password || u.contrasena || "usuario";
-            const cursoNombre = u.curso ? u.curso.toUpperCase().trim() : null;
-            const cursoId = mapaCursos[cursoNombre] || null;
+            if (!nombreUsuario) continue;
             
-            // primer_ingreso del archivo viejo se traduce a si debe cambiar clave
+            const passwordUsuario = u.password || u.contrasena || "usuario";
+            const cursoOriginal = u.curso || "";
+            const cursoId = mapaCursos[limpiarTexto(cursoOriginal)] || null;
+            
             const debeCambiar = u.debe_cambiar_clave !== undefined ? u.debe_cambiar_clave : (u.primer_ingreso == 1);
 
             await pool.query(
                 'INSERT INTO usuarios (username, password, rol, curso_id, debe_cambiar_clave) VALUES ($1, $2, \'alumno\', $3, $4)', 
-                [nombreUsuario, passwordUsuario, cursoId, debeCambiar]
+                [nombreUsuario.trim(), passwordUsuario.toString().trim(), cursoId, debeCambiar]
             );
         }
 
-        // 3. Insertar las Tareas (Recursos)
+        // 3. Insertar Tareas
         for (let r of recursosInput) {
             const titulo = r.titulo || "Tarea sin título";
             const descripcion = r.descripcion || "";
@@ -155,14 +160,14 @@ app.post('/api/sistema/restaurar', express.json({limit: '100mb'}), async (req, r
 
             await pool.query(
                 'INSERT INTO tareas (titulo, descripcion, carpeta, archivo_url, requiere_entrega) VALUES ($1, $2, $3, $4, $5)',
-                [titulo, descripcion, carpeta, archivoUrl, requiereEntrega]
+                [titulo.trim(), descripcion.trim(), carpeta.trim(), archivoUrl ? archivoUrl.trim() : null, requiereEntrega]
             );
         }
 
-        res.json({ success: true, message: "¡Datos migrados y restaurados con éxito total!" });
+        return res.json({ success: true, message: "¡Datos migrados y restaurados con éxito total!" });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Error en la base de datos: " + err.message });
+        console.error("Error detallado en restauración:", err);
+        return res.status(500).json({ success: false, error: err.message });
     }
 });
     try {
