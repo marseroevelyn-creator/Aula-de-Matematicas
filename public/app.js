@@ -151,7 +151,7 @@ async function inicializarProfesora() {
     }
 }
 
-// Carga general de control de tarjetas horizontales (opcional para control redundante)
+// Carga general de control de tarjetas horizontales
 async function cargarCursos() {
     try {
         const res = await fetch('/api/cursos');
@@ -206,7 +206,7 @@ async function cambiarCursoActivoProfesor(cursoId) {
                     <span style="font-size:11px; color:var(--text-muted);">${alumno.debe_cambiar_clave ? '⚠️ Debe cambiar clave' : '✅ Clave establecida'}</span>
                 </div>
                 <div style="display:flex; gap:5px;">
-                    <button onclick="reiniciarClaveAlumno('${alumno.id}')" class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Reiniciar clave de fábrica">🔄 Clave</button>
+                    <button onclick="reiniciarClaveAlumno('${alumno.id}')" class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Reiniciar clave de fábrica a 'usuario'">🔄 Clave</button>
                     <button onclick="eliminarAlumno('${alumno.id}')" class="btn-danger" style="padding: 4px 8px; font-size: 11px;" title="Eliminar alumno del sistema">🗑️</button>
                 </div>
             </div>
@@ -289,20 +289,27 @@ async function eliminarCurso(id) {
 // =========================================================================
 // --- GESTIÓN DE ALUMNOS (ALTA, BAJA Y REINICIO) ---
 // =========================================================================
+
+// ENVÍO DE FORMULARIO DE ALTA (Escucha el submit de tu formulario)
+document.getElementById('form-crear-alumno').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await cargarAlumnos();
+});
+
 async function cargarAlumnos() {
-    const userInput = document.getElementById('nuevo-alumno-username');
-    const passInput = document.getElementById('nuevo-alumno-password');
+    const userInput = document.getElementById('nuevo-alumno-username') || document.getElementById('alumno-username');
     
     const username = userInput.value.trim().toLowerCase();
-    const password = passInput.value.trim();
+    // Asignación totalmente automática de la contraseña inicial requerida por consigna
+    const password = "usuario"; 
 
     if (!cursoSeleccionadoProfesorId) {
         alert("⚠️ Por favor, selecciona primero un curso activo en el panel superior.");
         return;
     }
 
-    if (!username || !password) {
-        alert("⚠️ Por favor, completa el nombre de usuario y la contraseña provisoria.");
+    if (!username) {
+        alert("⚠️ Por favor, completa el nombre de usuario del alumno.");
         return;
     }
 
@@ -320,12 +327,12 @@ async function cargarAlumnos() {
         const data = await res.json();
 
         if (data.id || data.success) {
-            alert(`👤 Alumno "${username}" registrado correctamente.`);
+            alert(`👤 Alumno "${username}" registrado con éxito. Su clave inicial es "usuario".`);
             userInput.value = '';
-            passInput.value = 'usuario'; // Reseteamos al valor cómodo por defecto
             
-            // Refrescamos al instante el panel del curso seleccionado
+            // Refrescamos al instante el panel de alumnos del curso seleccionado
             cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
+            precargarUsuariosParaLogin(); // Actualiza la caché del buscador predictivo
         } else {
             alert("Error al registrar alumno: " + (data.error || "El nombre de usuario ya se encuentra en uso."));
         }
@@ -337,12 +344,19 @@ async function cargarAlumnos() {
 
 async function reiniciarClaveAlumno(id) {
     if(confirm("¿Deseas restablecer la contraseña de este estudiante a la clave inicial 'usuario'?")) {
-        // Adaptación segura utilizando la API de usuarios generales para preservar persistencia en Neon
-        await fetch(`/api/usuarios/${id}/reiniciar`, { method: 'POST' })
-        .then(res => {
-            alert("🔑 Clave restablecida a 'usuario' con éxito.");
-            cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
-        }).catch(err => console.error(err));
+        try {
+            // Corregido a la ruta de usuarios del sistema central para evitar el 404
+            const res = await fetch(`/api/usuarios/${id}/reiniciar`, { method: 'POST' });
+            if (res.ok) {
+                alert("🔑 Clave restablecida a 'usuario' con éxito. Se le solicitará cambiarla en su próximo ingreso.");
+                cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
+            } else {
+                alert("No se pudo procesar el reinicio en el servidor.");
+            }
+        } catch (err) {
+            console.error("Error al reiniciar clave:", err);
+            alert("Error de conexión al intentar restablecer la contraseña.");
+        }
     }
 }
 
@@ -351,6 +365,7 @@ async function eliminarAlumno(id) {
         await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
         alert("Estudiante dado de baja.");
         cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
+        precargarUsuariosParaLogin();
     }
 }
 
@@ -489,7 +504,6 @@ async function enviarDevolucion(id, reiniciar) {
     alert("Evaluación guardada correctamente en el servidor.");
     cargarEntregasDeTarea();
 }
-
 
 // =========================================================================
 // --- LÓGICA GENERAL Y FEED DEL ALUMNO ---
