@@ -361,7 +361,7 @@ async function reiniciarClaveAlumno(id) {
     }
     if(confirm("¿Deseas restablecer la contraseña de este estudiante a la clave inicial 'usuario'?")) {
         try {
-            // Conexión a la ruta de usuarios del sistema central
+            // Conexión directa a la ruta de usuarios del sistema central
             const res = await fetch(`/api/usuarios/${id}/reiniciar`, { method: 'POST' });
             const data = await res.json();
             if (data.success) {
