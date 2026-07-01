@@ -151,7 +151,7 @@ app.get('/api/cursos/:id/tareas', async (req, res) => {
 });
 
 // =========================================================================
-// 👥 ENDPOINTS DE GESTIÓN DE USUARIOS / ALUMNOS (REPARADO Y SANITIZADO)
+// 👥 ENDPOINTS DE GESTIÓN DE USUARIOS / ALUMNOS
 // =========================================================================
 app.get('/api/usuarios', async (req, res) => {
     try {
@@ -329,7 +329,7 @@ app.delete('/api/tareas/:id', async (req, res) => {
 });
 
 // =========================================================================
-// 🎯 ASIGNACIONES GRUPALES E INDIVIDUALES (REPARADO Y REASIGNAR INTEGRADO)
+// 🎯 ASIGNACIONES GRUPALES E INDIVIDUALES
 // =========================================================================
 app.post('/api/asignaciones/asignar-grupo', async (req, res) => {
     const { curso_id, tarea_id } = req.body;
@@ -428,7 +428,6 @@ app.post('/api/asignaciones/:id/corregir', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- NUEVO MÉTODO PARA REASIGNAR (REHACER) TAREA MAL SUBIDA ---
 app.post('/api/asignaciones/:id/reasignar', async (req, res) => {
     const { id } = req.params;
     const { motivo } = req.body;
@@ -444,7 +443,7 @@ app.post('/api/asignaciones/:id/reasignar', async (req, res) => {
 });
 
 // =========================================================================
-// 🎓 FEED Y ENVIOS DEL ESTUDIANTE (VALIDACIÓN DE PRERREQUISITOS REALES)
+// 🎓 FEED Y ENVIOS DEL ESTUDIANTE
 // =========================================================================
 app.get('/api/alumno/dashboard', async (req, res) => {
     if (!req.session.usuarioId) return res.status(401).json({ error: 'No autenticado' });
@@ -452,7 +451,6 @@ app.get('/api/alumno/dashboard', async (req, res) => {
         const datosCurso = await pool.query('SELECT nombre, whatsapp_link FROM cursos WHERE id = $1', [req.session.cursoId]);
         const cursoInfo = datosCurso.rows[0] || { nombre: 'Sin Curso Asignado', whatsapp_link: null };
 
-        // Lógica de validación de prerrequisito: Compara dinámicamente si la actividad dependiente fue completada por el alumno
         const tareas = await pool.query(`
             SELECT t.id AS tarea_id, t.titulo, t.descripcion, t.carpeta, t.enlace_externo, t.archivo_url, t.requiere_entrega, t.prerrequisito_id,
                    a.id AS asignacion_id, a.completada, a.visto, a.devolucion,
