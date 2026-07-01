@@ -12,20 +12,26 @@
     <div id="section-login" class="container-auth">
         <div class="card login-box">
             <h2>Acceso al Aula de Matemática</h2>
-            <form id="login-form">
-                <label>Usuario</label>
-                <input type="text" id="login-username" placeholder="Ingresa tu usuario asignado" required>
-                
-               <label>Contraseña</label>
-               <div class="password-container">
-                    <input type="password" id="login-password" placeholder="Ingresa tu contraseña" required>
-                    <button type="button" id="btn-toggle-pwd" class="btn-eye">👁️</button>
-               </div>
-                
-                <button type="submit" class="btn-primary">Ingresar a la Plataforma</button>
-            </form>
-        </div>
+      <form id="login-form">
+    <label>Usuario</label>
+    <input type="text" id="login-username" placeholder="Ingresa tu usuario asignado" required>
+
+    <label>Contraseña</label>
+    <div class="password-container">
+        <input type="password" id="login-password" placeholder="Ingresa tu contraseña" required>
+        <button type="button" id="btn-toggle-pwd" class="btn-eye">👁️</button>
     </div>
+
+    <button type="submit" class="btn-primary">Ingresar a la Plataforma</button>
+
+    <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; text-align: center;">
+        <label style="font-size: 13px; color: #666; display: block; margin-bottom: 5px; font-weight: bold;">⚡ Zona Docente: Importar Datos</label>
+        <input type="file" id="importar-archivo-directo" accept=".json" style="display: none;">
+        <button type="button" onclick="document.getElementById('importar-archivo-directo').click()" class="btn-secondary" style="background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 13px; width: 100%;">
+            📁 Seleccionar copia_seguridad_aula.json
+        </button>
+    </div>
+</form>
 
     <!-- BLOQUE GLOBAL: INTERFAZ COMPLETA DE LA PROFESORA -->
     <div id="section-profesora" class="hidden container-dashboard">
