@@ -121,23 +121,59 @@ async function inicializarProfesora() {
     await cargarTareasGlobales();
 }
 
-async function cargarCursos() {
-    const res = await fetch('/api/cursos');
-    const cursos = await res.json();
-    const container = document.getElementById('container-cursos-lista');
-    container.innerHTML = '';
+// --- CORRECCIÓN: CREAR CURSO CON WHATSAPP OPCIONAL ---
+async function crearCurso() {
+    const nombreInput = document.getElementById('nuevo-curso-nombre');
+    const whatsappInput = document.getElementById('nuevo-curso-whatsapp');
     
-    cursos.forEach(c => {
-        container.innerHTML += `
-            <div class="item-lista-accion">
-                <span style="font-weight:bold; cursor:pointer;" onclick="seleccionarCurso(${c.id}, '${c.nombre}')">📂 ${c.nombre}</span>
-                <div>
-                    <button onclick="editarCurso(${c.id}, '${c.nombre}', '${c.whatsapp_link || ''}')" style="padding:4px; font-size:10pt;">✏️</button>
-                    <button onclick="eliminarCurso(${c.id})" style="padding:4px; font-size:10pt; background:red; color:white;">❌</button>
-                </div>
-            </div>
-        `;
-    });
+    const nombre = nombreInput.value.trim();
+    let whatsapp = whatsappInput.value.trim();
+
+    if (!nombre) {
+        alert("⚠️ Por favor, ingresa el nombre del curso.");
+        nombreInput.focus();
+        return;
+    }
+
+    // Validamos el enlace de WhatsApp SOLO si el usuario escribió algo
+    if (whatsapp) {
+        if (!whatsapp.startsWith('http://') && !whatsapp.startsWith('https://')) {
+            // Si escribió un enlace pero olvidó el https://, se lo agregamos automáticamente
+            whatsapp = 'https://' + whatsapp;
+        }
+    } else {
+        // Si está vacío, lo enviamos como cadena vacía para que la base de datos lo acepte
+        whatsapp = "";
+    }
+
+    try {
+        const res = await fetch('/api/cursos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, whatsapp_link: whatsapp })
+        });
+        const data = await res.json();
+
+        if (data.id || data.success) {
+            alert("🎉 Curso creado con éxito.");
+            
+            // Limpiamos los inputs
+            nombreInput.value = '';
+            whatsappInput.value = '';
+            
+            // Recargamos los datos de la profesora para que impacte en las listas y selectores
+            if (typeof inicializarProfesora === 'function') {
+                await inicializarProfesora();
+            } else {
+                location.reload();
+            }
+        } else {
+            alert("Error al crear curso: " + (data.error || "Error desconocido"));
+        }
+    } catch (err) {
+        console.error("Error en crearCurso:", err);
+        alert("Hubo un error de conexión con el servidor.");
+    }
 }
 
 document.getElementById('form-crear-curso').addEventListener('submit', async (e) => {
@@ -252,22 +288,56 @@ async function inicializarProfesora() {
         selectFiltro.appendChild(opt);
     });
 }
+// --- TU FUNCIÓN ACTUALIZADA: CARGAR ALUMNOS EN EL CURSO ACTIVO ---
 async function cargarAlumnos() {
-    const res = await fetch(`/api/alumnos/curso/${cursoActualId}`);
-    const alumnos = await res.json();
-    const container = document.getElementById('lista-alumnos-container');
-    container.innerHTML = '';
-    alumnos.forEach(al => {
-        container.innerHTML += `
-            <li class="item-lista-accion">
-                <span>${al.username} (Clave por defecto: ${al.debe_cambiar_clave ? 'SÍ' : 'NO'})</span>
-                <div>
-                    <button onclick="reiniciarClaveAlumno(${al.id})" style="padding:4px; background:orange; font-size:9pt;">🔑 Reiniciar</button>
-                    <button onclick="eliminarAlumno(${al.id})" style="padding:4px; background:red; color:white; font-size:9pt;">❌</button>
-                </div>
-            </li>
-        `;
-    });
+    const userInput = document.getElementById('nuevo-alumno-username');
+    const passInput = document.getElementById('nuevo-alumno-password');
+    
+    // 1. Limpiamos espacios y pasamos el usuario a minúsculas
+    const username = userInput.value.trim().toLowerCase();
+    const password = passInput.value.trim();
+
+    // 2. VALIDACIÓN CLAVE: Verificar que la profesora haya seleccionado un curso arriba
+    if (!cursoSeleccionadoProfesorId) {
+        alert("⚠️ Por favor, selecciona primero un 'Curso Activo' en el panel de arriba para saber en qué curso registrar al alumno.");
+        return;
+    }
+
+    if (!username || !password) {
+        alert("⚠️ Por favor, completa el nombre de usuario y la contraseña provisoria.");
+        return;
+    }
+
+    try {
+        // 3. Enviamos la petición al servidor asociándola al curso activo
+        const res = await fetch('/api/usuarios', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                username: username, 
+                password: password, 
+                rol: 'alumno', 
+                curso_id: parseInt(cursoSeleccionadoProfesorId) // Vinculamos dinámicamente con el curso elegido
+            })
+        });
+        const data = await res.json();
+
+        if (data.id || data.success) {
+            alert(`👤 Alumno "${username}" registrado correctamente.`);
+            
+            // Limpiamos el formulario
+            userInput.value = '';
+            passInput.value = 'matematica123'; // Clave por defecto conveniente
+            
+            // 4. Refrescamos inmediatamente la lista de alumnos del curso para ver el cambio en tiempo real
+            cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
+        } else {
+            alert("Error al registrar alumno: " + (data.error || "Asegúrate de que el usuario no esté repetido."));
+        }
+    } catch (err) {
+        console.error("Error en cargarAlumnos:", err);
+        alert("Hubo un error de red al intentar conectar con el servidor.");
+    }
 }
 
 document.getElementById('form-crear-alumno').addEventListener('submit', async (e) => {
