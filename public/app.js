@@ -6,31 +6,40 @@ let listaAlumnosCache = [];
 let usuarioLogueadoId = null;
 
 // --- MANEJO DE CONTRASEÑA ("OJO") ---
-document.getElementById('btn-toggle-pwd').addEventListener('click', () => {
-    const pwdInput = document.getElementById('login-password');
-    if (pwdInput.type === 'password') {
-        pwdInput.type = 'text';
-        document.getElementById('btn-toggle-pwd').textContent = '🙈';
-    } else {
-        pwdInput.type = 'password';
-        document.getElementById('btn-toggle-pwd').textContent = '👁️';
-    }
-});
+const btnTogglePwd = document.getElementById('btn-toggle-pwd');
+if (btnTogglePwd) {
+    btnTogglePwd.addEventListener('click', () => {
+        const pwdInput = document.getElementById('login-password');
+        if (pwdInput) {
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                btnTogglePwd.textContent = '🙈';
+            } else {
+                pwdInput.type = 'password';
+                btnTogglePwd.textContent = '👁️';
+            }
+        }
+    });
+}
 
 // --- REDIRECCIÓN AL ACCESO DEL PANEL DOCENTE (CORREGIDO) ---
-if (document.getElementById('btn-ir-admin')) {
-    document.getElementById('btn-ir-admin').addEventListener('click', () => {
-        // Rellena el usuario automáticamente para ahorrarle tiempo
-        document.getElementById('login-username').value = 'profesora';
-        
-        // Deja el campo de contraseña vacío y le da el foco para que la profesora la escriba manualmente
+const btnIrAdmin = document.getElementById('btn-ir-admin');
+if (btnIrAdmin) {
+    btnIrAdmin.addEventListener('click', () => {
+        const usernameInput = document.getElementById('login-username');
         const pwdInput = document.getElementById('login-password');
-        pwdInput.value = '';
-        pwdInput.focus();
         
-        // Limpia cualquier sugerencia predictiva que haya quedado flotando
-        document.getElementById('login-sugerencias').innerHTML = '';
-        document.getElementById('login-sugerencias').classList.add('hidden');
+        if (usernameInput) usernameInput.value = 'profesora';
+        if (pwdInput) {
+            pwdInput.value = '';
+            pwdInput.focus();
+        }
+        
+        const cajaSugerencias = document.getElementById('login-sugerencias');
+        if (cajaSugerencias) {
+            cajaSugerencias.innerHTML = '';
+            cajaSugerencias.classList.add('hidden');
+        }
     });
 }
 
@@ -39,7 +48,6 @@ async function precargarUsuariosParaLogin() {
     try {
         const res = await fetch('/api/usuarios');
         const usuarios = await res.json();
-        // Guardamos solo los alumnos por privacidad de la profesora
         listaAlumnosCache = usuarios.filter(u => u.rol === 'alumno');
     } catch (err) {
         console.error("No se pudieron precargar los usuarios para el autocompletado:", err);
@@ -48,6 +56,8 @@ async function precargarUsuariosParaLogin() {
 
 function filtrarUsuariosLogin(busqueda) {
     const cajaSugerencias = document.getElementById('login-sugerencias');
+    if (!cajaSugerencias) return;
+
     const texto = busqueda.trim().toLowerCase();
 
     if (!texto) {
@@ -71,9 +81,13 @@ function filtrarUsuariosLogin(busqueda) {
 }
 
 function seleccionarUsuarioSugerido(username) {
-    document.getElementById('login-username').value = username;
-    document.getElementById('login-sugerencias').classList.add('hidden');
-    document.getElementById('login-password').focus();
+    const usernameInput = document.getElementById('login-username');
+    const pwdInput = document.getElementById('login-password');
+    const cajaSugerencias = document.getElementById('login-sugerencias');
+
+    if (usernameInput) usernameInput.value = username;
+    if (cajaSugerencias) cajaSugerencias.classList.add('hidden');
+    if (pwdInput) pwdInput.focus();
 }
 
 // Inicializar el buscador predictivo al cargar el script
@@ -81,68 +95,80 @@ precargarUsuariosParaLogin();
 
 
 // --- MANEJO DE INGRESO Y LOGOUT ---
-document.getElementById('login-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('login-username').value.trim();
-    const password = document.getElementById('login-password').value;
+const loginForm = document.getElementById('login-form');
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const usernameInput = document.getElementById('login-username');
+        const pwdInput = document.getElementById('login-password');
+        
+        if (!usernameInput || !pwdInput) return;
+        
+        const username = usernameInput.value.trim();
+        const password = pwdInput.value;
 
-    try {
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
 
-        if (data.success) {
-            document.getElementById('section-login').classList.add('hidden');
-            
-            if (data.rol === 'profesora') {
-                document.getElementById('section-profesora').classList.remove('hidden');
-                inicializarProfesora();
-            } else {
-                // Alumno entra: verificar si requiere cambiar clave por primera vez (Boceto 8)
-                if (data.debeCambiar) {
-                    document.getElementById('modal-primer-ingreso').classList.remove('hidden');
+            if (data.success) {
+                document.getElementById('section-login').classList.add('hidden');
+                
+                if (data.rol === 'profesora') {
+                    document.getElementById('section-profesora').classList.remove('hidden');
+                    inicializarProfesora();
                 } else {
-                    document.getElementById('section-alumno').classList.remove('hidden');
-                    inicializarAlumno();
+                    if (data.debeCambiar) {
+                        document.getElementById('modal-primer-ingreso').classList.remove('hidden');
+                    } else {
+                        document.getElementById('section-alumno').classList.remove('hidden');
+                        inicializarAlumno();
+                    }
                 }
+            } else {
+                alert("⚠️ " + data.message);
             }
-        } else {
-            alert("⚠️ " + data.message);
+        } catch (err) {
+            console.error(err);
+            alert("Error de red al intentar ingresar.");
         }
-    } catch (err) {
-        console.error(err);
-        alert("Error de red al intentar ingresar.");
-    }
-});
+    });
+}
 
 // Forzar el cambio de clave inicial a alumnos nuevos
-document.getElementById('btn-guardar-primera-clave').addEventListener('click', async () => {
-    const nueva = document.getElementById('nueva-clave-alumno').value;
-    if (nueva.length < 4) {
-        alert("⚠️ La contraseña debe tener al menos 4 dígitos por seguridad.");
-        return;
-    }
-    try {
-        const res = await fetch('/api/auth/cambiar-clave', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nuevaClave: nueva })
-        });
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById('modal-primer-ingreso').classList.add('hidden');
-            document.getElementById('section-alumno').classList.remove('hidden');
-            inicializarAlumno();
-        } else {
-            alert("Error: " + data.error);
+const btnGuardarPrimeraClave = document.getElementById('btn-guardar-primera-clave');
+if (btnGuardarPrimeraClave) {
+    btnGuardarPrimeraClave.addEventListener('click', async () => {
+        const nuevaInput = document.getElementById('nueva-clave-alumno');
+        if (!nuevaInput) return;
+        const nueva = nuevaInput.value;
+        if (nueva.length < 4) {
+            alert("⚠️ La contraseña debe tener al menos 4 dígitos por seguridad.");
+            return;
         }
-    } catch (err) {
-        alert("Error al intentar actualizar la clave.");
-    }
-});
+        try {
+            const res = await fetch('/api/auth/cambiar-clave', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nuevaClave: nueva })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('modal-primer-ingreso').classList.add('hidden');
+                document.getElementById('section-alumno').classList.remove('hidden');
+                inicializarAlumno();
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (err) {
+            alert("Error al intentar actualizar la clave.");
+        }
+    });
+}
 
 
 // =========================================================================
@@ -159,6 +185,7 @@ async function cargarCursosSelector() {
         const res = await fetch('/api/cursos');
         const cursos = await res.json();
         const select = document.getElementById('filtro-curso-profesora');
+        if (!select) return;
         select.innerHTML = '<option value="">-- Seleccione un curso --</option>';
         cursos.forEach(c => {
             select.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
@@ -169,7 +196,6 @@ async function cargarCursosSelector() {
 }
 
 async function cambiarCursoActiveProfesor(cursoId) {
-    // Soporte para variaciones de nombres de función
     cambiarCursoActivoProfesor(cursoId);
 }
 
@@ -186,7 +212,7 @@ async function cambiarCursoActivoProfesor(cursoId) {
     }
 
     try {
-        // 1. Cargar alumnos y sus progresos calculados en el servidor (Boceto 4)
+        // 1. Cargar alumnos y progresos del servidor
         const res = await fetch(`/api/cursos/${cursoId}/alumnos-progreso`);
         const alumnos = await res.json();
 
@@ -205,9 +231,8 @@ async function cambiarCursoActivoProfesor(cursoId) {
             `).join('');
         }
 
-        // 2. Actualizar las tareas que están vinculadas a este curso
+        // 2. Actualizar las tareas e informes vinculados
         await renderizarTareasAsignadasAlCurso();
-        // 3. Actualizar el listado de entregas pendientes de corregir para este curso
         await actualizarSelectTareasEntregas();
 
     } catch (err) {
@@ -220,8 +245,12 @@ async function cambiarCursoActivoProfesor(cursoId) {
 function mostrarModalCurso() { document.getElementById('modal-curso').classList.remove('hidden'); }
 function cerrarModalCurso() { document.getElementById('modal-curso').classList.add('hidden'); }
 async function crearCurso() {
-    const nombre = document.getElementById('nuevo-curso-nombre').value.trim();
-    const wa = document.getElementById('nuevo-curso-whatsapp').value.trim();
+    const nombreInput = document.getElementById('nuevo-curso-nombre');
+    const waInput = document.getElementById('nuevo-curso-whatsapp');
+    if (!nombreInput || !waInput) return;
+
+    const nombre = nombreInput.value.trim();
+    const wa = waInput.value.trim();
     if (!nombre) { alert("El nombre del curso es obligatorio."); return; }
 
     try {
@@ -231,49 +260,53 @@ async function crearCurso() {
             body: JSON.stringify({ nombre, whatsapp_link: wa })
         });
         cerrarModalCurso();
-        document.getElementById('nuevo-curso-nombre').value = '';
-        document.getElementById('nuevo-curso-whatsapp').value = '';
+        nombreInput.value = '';
+        waInput.value = '';
         await cargarCursosSelector();
     } catch (err) {
         alert("Error al guardar el nuevo curso.");
     }
 }
 
-// --- ALTA DE ESTUDIANTES DIRECTA (SIN CONTRASEÑA MANUAL) ---
-document.getElementById('form-crear-alumno').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const input = document.getElementById('nuevo-alumno-username');
-    const username = input.value.trim().toLowerCase();
+// --- ALTA DE ESTUDIANTES DIRECTA (PROTEGIDA ANTE COMPONENTES NULOS) ---
+const formCrearAlumno = document.getElementById('form-crear-alumno');
+if (formCrearAlumno) {
+    formCrearAlumno.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('nuevo-alumno-username');
+        if (!input) return;
+        const username = input.value.trim().toLowerCase();
 
-    if (!cursoSeleccionadoProfesorId) {
-        alert("⚠️ Por favor, selecciona primero un curso activo en el panel superior.");
-        return;
-    }
-
-    try {
-        const res = await fetch('/api/usuarios', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                username, 
-                password: 'usuario', 
-                rol: 'alumno', 
-                curso_id: parseInt(cursoSeleccionadoProfesorId) 
-            })
-        });
-        const data = await res.json();
-        if (data.success || data.id) {
-            alert(`👤 Alumno "${username}" registrado con éxito.\nSu clave automática inicial es "usuario".`);
-            input.value = '';
-            cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
-            precargarUsuariosParaLogin();
-        } else {
-            alert("Error: " + (data.error || "El nombre de usuario ya está registrado."));
+        if (!cursoSeleccionadoProfesorId) {
+            alert("⚠️ Por favor, selecciona primero un curso activo en el panel superior.");
+            return;
         }
-    } catch (err) {
-        alert("Error de conexión al registrar al estudiante.");
-    }
-});
+
+        try {
+            const res = await fetch('/api/usuarios', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username, 
+                    password: 'usuario', 
+                    rol: 'alumno', 
+                    curso_id: parseInt(cursoSeleccionadoProfesorId) 
+                })
+            });
+            const data = await res.json();
+            if (data.success || data.id) {
+                alert(`👤 Alumno "${username}" registrado con éxito.\nSu clave automática inicial es "usuario".`);
+                input.value = '';
+                cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
+                precargarUsuariosParaLogin();
+            } else {
+                alert("Error: " + (data.error || "El nombre de usuario ya está registrado."));
+            }
+        } catch (err) {
+            alert("Error de conexión al registrar al estudiante.");
+        }
+    });
+}
 
 async function reiniciarClaveAlumno(id) {
     if (!id || id === 'undefined') return alert("ID inválido.");
@@ -296,30 +329,34 @@ async function eliminarAlumno(id) {
 }
 
 
-// --- BANCO GLOBAL DE RECURSOS (LÓGICA CON CLOUDINARY REAL) ---
+// --- BANCO GLOBAL DE RECURSOS ---
 function mostrarModalTarea() { document.getElementById('modal-tarea').classList.remove('hidden'); }
 function cerrarModalTarea() { document.getElementById('modal-tarea').classList.add('hidden'); }
 
 async function cargarTareasGlobales() {
-    const res = await fetch('/api/tareas');
-    bancoTareasCache = await res.json();
-    renderizarBancoTareas();
-    
-    // Población predictiva de prerrequisitos en la interfaz flotante
-    const pre = document.getElementById('t-prerrequisito');
-    if(pre) {
-        pre.innerHTML = '<option value="">Sin prerrequisito</option>';
-        bancoTareasCache.forEach(t => {
-            pre.innerHTML += `<option value="${t.id}">${t.titulo}</option>`;
-        });
+    try {
+        const res = await fetch('/api/tareas');
+        bancoTareasCache = await res.json();
+        renderizarBancoTareas();
+        
+        const pre = document.getElementById('t-prerrequisito');
+        if(pre) {
+            pre.innerHTML = '<option value="">Sin prerrequisito</option>';
+            bancoTareasCache.forEach(t => {
+                pre.innerHTML += `<option value="${t.id}">${t.titulo}</option>`;
+            });
+        }
+    } catch (err) {
+        console.error(err);
     }
 }
 
 function renderizarBancoTareas() {
-    const query = document.getElementById('input-buscar-tarea').value.toLowerCase();
+    const inputBuscar = document.getElementById('input-buscar-tarea');
     const container = document.getElementById('banco-tareas-render');
     if(!container) return;
     
+    const query = inputBuscar ? inputBuscar.value.toLowerCase() : '';
     container.innerHTML = '';
     const unidades = {};
 
@@ -335,8 +372,8 @@ function renderizarBancoTareas() {
         unidades[unidad].forEach(t => {
             htmlUnidad += `
                 <div class="recurso-item">
-                    <span><strong>${t.titulo}</strong> ${t.archivo_url ? '📄 (Con Adjunto)' : ''}</span>
-                    <button onclick="asignarTareaACurso(${t.id})" class="btn-success" style="padding:4px 8px; font-size:11px;">+ Asignar a Curso</button>
+                    <span><strong>${t.titulo}</strong> ${t.archivo_url ? '📄 (Adjunto)' : ''}</span>
+                    <button onclick="asignarTareaACurso(${t.id})" class="btn-success" style="padding:4px 8px; font-size:11px;">+ Asignar</button>
                 </div>
             `;
         });
@@ -345,39 +382,43 @@ function renderizarBancoTareas() {
     }
 }
 
-// Envío de tareas procesando archivos binarios hacia Cloudinary a través de Multer
-document.getElementById('form-nueva-tarea').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append('titulo', document.getElementById('t-titulo').value);
-    formData.append('carpeta', document.getElementById('t-carpeta').value);
-    formData.append('descripcion', document.getElementById('t-desc').value);
-    formData.append('enlace_externo', document.getElementById('t-link').value);
-    formData.append('fecha_entrega', document.getElementById('t-fecha').value);
-    
-    const preId = document.getElementById('t-prerrequisito').value;
-    if(preId) formData.append('prerrequisito_id', preId);
-    
-    formData.append('requiere_entrega', document.getElementById('t-entrega').checked ? 'true' : 'false');
-    formData.append('asignar_a', 'banco_solo'); 
+// Formulario de nueva tarea blindado contra nulos
+const formNuevaTarea = document.getElementById('form-nueva-tarea');
+if (formNuevaTarea) {
+    formNuevaTarea.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('titulo', document.getElementById('t-titulo').value);
+        formData.append('carpeta', document.getElementById('t-carpeta').value);
+        formData.append('descripcion', document.getElementById('t-desc').value);
+        formData.append('enlace_externo', document.getElementById('t-link').value);
+        formData.append('fecha_entrega', document.getElementById('t-fecha').value);
+        
+        const preId = document.getElementById('t-prerrequisito').value;
+        if(preId) formData.append('prerrequisito_id', preId);
+        
+        formData.append('requiere_entrega', document.getElementById('t-entrega').checked ? 'true' : 'false');
+        formData.append('asignar_a', 'banco_solo'); 
 
-    const file = document.getElementById('t-file').files[0];
-    if (file) formData.append('archivo', file);
+        const fileInput = document.getElementById('t-file');
+        const file = fileInput ? fileInput.files[0] : null;
+        if (file) formData.append('archivo', file);
 
-    try {
-        const res = await fetch('/api/tareas', { method: 'POST', body: formData });
-        if (res.ok) {
-            cerrarModalTarea();
-            document.getElementById('form-nueva-tarea').reset();
-            await cargarTareasGlobales();
-            if(cursoSeleccionadoProfesorId) cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
-        } else {
-            alert("Error al subir el recurso al servidor.");
+        try {
+            const res = await fetch('/api/tareas', { method: 'POST', body: formData });
+            if (res.ok) {
+                cerrarModalTarea();
+                formNuevaTarea.reset();
+                await cargarTareasGlobales();
+                if(cursoSeleccionadoProfesorId) cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
+            } else {
+                alert("Error al subir el recurso al servidor.");
+            }
+        } catch(err) {
+            console.error(err);
         }
-    } catch(err) {
-        console.error(err);
-    }
-});
+    });
+}
 
 async function asignarTareaACurso(tareaId) {
     if (!cursoSeleccionadoProfesorId) {
@@ -428,7 +469,7 @@ async function renderizarTareasAsignadasAlCurso() {
 }
 
 async function desvincularTareaCurso(tareaId) {
-    if(confirm("¿Deseas remover esta actividad del curso actual? No borrará las entregas guardadas.")) {
+    if(confirm("¿Deseas remover esta actividad del curso actual?")) {
         await fetch(`/api/asignaciones/curso/${cursoSeleccionadoProfesorId}/tarea/${tareaId}`, { method: 'DELETE' });
         renderizarTareasAsignadasAlCurso();
     }
@@ -439,18 +480,23 @@ async function desvincularTareaCurso(tareaId) {
 async function cargarFechasImportantesAdmin() {
     const lista = document.getElementById('lista-fechas-admin');
     if(!lista) return;
-    const res = await fetch('/api/fechas');
-    const fechas = await res.json();
-    lista.innerHTML = fechas.map(f => `
-        <li style="font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between;">
-            <span>📅 <strong>${f.fecha.split('T')[0]}:</strong> ${f.evento}</span>
-            <button onclick="eliminarFecha('${f.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">🗑️</button>
-        </li>
-    `).join('');
+    try {
+        const res = await fetch('/api/fechas');
+        const fechas = await res.json();
+        lista.innerHTML = fechas.map(f => `
+            <li style="font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between;">
+                <span>📅 <strong>${f.fecha.split('T')[0]}:</strong> ${f.evento}</span>
+                <button onclick="eliminarFecha('${f.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">🗑️</button>
+            </li>
+        `).join('');
+    } catch(err) {
+        console.error(err);
+    }
 }
 
-if(document.getElementById('form-nueva-fecha')) {
-    document.getElementById('form-nueva-fecha').addEventListener('submit', async (e) => {
+const formNuevaFecha = document.getElementById('form-nueva-fecha');
+if (formNuevaFecha) {
+    formNuevaFecha.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fecha = document.getElementById('f-fecha').value;
         const evento = document.getElementById('f-evento').value;
@@ -474,33 +520,39 @@ async function eliminarFecha(id) {
 async function actualizarSelectTareasEntregas() {
     const select = document.getElementById('select-tareas-entregas');
     if(!select) return;
-    const res = await fetch('/api/tareas');
-    const tareas = await res.json();
-    select.innerHTML = '<option value="">-- Ver entregas por actividad --</option>';
-    tareas.forEach(t => {
-        select.innerHTML += `<option value="${t.id}">${t.titulo} (${t.carpeta})</option>`;
-    });
+    try {
+        const res = await fetch('/api/tareas');
+        const tareas = await res.json();
+        select.innerHTML = '<option value="">-- Ver entregas por actividad --</option>';
+        tareas.forEach(t => {
+            select.innerHTML += `<option value="${t.id}">${t.titulo} (${t.carpeta})</option>`;
+        });
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 async function cargarEntregasDeTarea() {
-    const tareaId = document.getElementById('select-tareas-entregas').value;
+    const select = document.getElementById('select-tareas-entregas');
     const render = document.getElementById('tabla-entregas-render');
-    if(!render) return;
+    if(!render || !select) return;
+    
+    const tareaId = select.value;
     if(!tareaId) { render.innerHTML = ''; return; }
 
     const res = await fetch(`/api/asignaciones/tarea/${tareaId}/entregas`);
     const entregas = await res.json();
 
     if(entregas.length === 0) {
-        render.innerHTML = '<p style="font-size:13px; color:var(--text-muted);">No se registran entregas cargadas para este recurso en ningún curso.</p>';
+        render.innerHTML = '<p style="font-size:13px; color:var(--text-muted);">No se registran entregas cargadas.</p>';
         return;
     }
 
     render.innerHTML = entregas.map(e => `
         <div class="card" style="border: 1px solid var(--border); padding:12px; font-size:13px;">
             <p><strong>Estudiante:</strong> ${e.alumno_nombre}</p>
-            <p><strong>Estado:</strong> ${e.completada ? '✅ Aprobado/Visto' : '⏳ Pendiente'}</p>
-            ${e.archivo_entrega_url ? `<p>🔗 <a href="${e.archivo_entrega_url}" target="_blank" style="color:var(--primary); font-weight:bold;">Ver captura/archivo enviado</a></p>` : '<p style="color:var(--text-muted);">Sin adjuntos</p>'}
+            <p><strong>Estado:</strong> ${e.completada ? '✅ Aprobado' : '⏳ Pendiente'}</p>
+            ${e.archivo_entrega_url ? `<p>🔗 <a href="${e.archivo_entrega_url}" target="_blank" style="color:var(--primary); font-weight:bold;">Ver captura enviada</a></p>` : '<p style="color:var(--text-muted);">Sin adjuntos</p>'}
             <div style="margin-top:8px;">
                 <input type="text" id="dev-${e.id}" placeholder="Escribe una devolución..." value="${e.devolucion || ''}" style="margin-bottom:5px; padding:6px;">
                 <div style="display:flex; gap:5px;">
@@ -513,7 +565,8 @@ async function cargarEntregasDeTarea() {
 }
 
 async function guardarCorreccion(asignacionId, aprobar) {
-    const dev = document.getElementById(`dev-${asignacionId}`).value;
+    const devInput = document.getElementById(`dev-${asignacionId}`);
+    const dev = devInput ? devInput.value : '';
     await fetch(`/api/asignaciones/${asignacionId}/corregir`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -533,27 +586,31 @@ async function inicializarAlumno() {
         if(!res.ok) return;
         const db = await res.json();
 
-        document.getElementById('lbl-estudiante-nombre').textContent = db.usuario;
-        document.getElementById('lbl-estudiante-curso').textContent = db.curso.nombre;
+        const nameLbl = document.getElementById('lbl-estudiante-nombre');
+        const cursoLbl = document.getElementById('lbl-estudiante-curso');
+        if (nameLbl) nameLbl.textContent = db.usuario;
+        if (cursoLbl) cursoLbl.textContent = db.curso.nombre;
         
         const btnWa = document.getElementById('lnk-estudiante-wa');
-        if(db.curso.whatsapp_link) {
-            btnWa.href = db.curso.whatsapp_link;
-            btnWa.style.display = 'inline-block';
-        } else {
-            btnWa.style.display = 'none';
+        if (btnWa) {
+            if(db.curso.whatsapp_link) {
+                btnWa.href = db.curso.whatsapp_link;
+                btnWa.style.display = 'inline-block';
+            } else {
+                btnWa.style.display = 'none';
+            }
         }
 
         const containerPendientes = document.getElementById('alumno-tareas-urgentes');
         const containerViejas = document.getElementById('alumno-tareas-viejas');
         const containerIndice = document.getElementById('alumno-indice-temas');
 
-        containerPendientes.innerHTML = '';
-        containerViejas.innerHTML = '';
-        containerIndice.innerHTML = '';
+        if (containerPendientes) containerPendientes.innerHTML = '';
+        if (containerViejas) containerViejas.innerHTML = '';
+        if (containerIndice) containerIndice.innerHTML = '';
 
         if(db.tareas.length === 0) {
-            containerPendientes.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No tenés actividades vigentes asignadas. ¡Al día!</p>';
+            if (containerPendientes) containerPendientes.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No tenés actividades asignadas. ¡Al día!</p>';
             return;
         }
 
@@ -562,13 +619,12 @@ async function inicializarAlumno() {
         db.tareas.forEach(t => {
             temasEncontrados.add(t.carpeta);
             
-            // Renderizado dinámico de la tarjeta según el tipo de recurso solicitado
             let formularioEntregaHtml = '';
             if (!t.completada) {
                 if (t.requiere_entrega) {
                     formularioEntregaHtml = `
                         <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1;">
-                            <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px;">Cargar foto o archivo de tu ejercicio resoluto:</label>
+                            <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px;">Cargar foto de tu ejercicio:</label>
                             <input type="file" id="file-entrega-${t.asignacion_id}" style="font-size:11px; margin-bottom:5px;">
                             <button onclick="entregarTareaConArchivo('${t.asignacion_id}')" class="btn-success" style="padding:4px 10px; font-size:12px;">Subir y Entregar</button>
                         </div>
@@ -599,28 +655,29 @@ async function inicializarAlumno() {
                     </div>
                     <p style="font-size:13px; color:#475569; margin-top:6px;">${t.descripcion || 'Sin descripción adicional disponible.'}</p>
                     
-                    ${t.archivo_url ? `<p style="margin-top:8px; font-size:12px;">📄 <a href="${t.archivo_url}" target="_blank" style="color:var(--primary); font-weight:bold;">Descargar material de soporte de la profesora</a></p>` : ''}
-                    ${t.enlace_externo ? `<p style="margin-top:4px; font-size:12px;">🔗 <a href="${t.enlace_externo}" target="_blank" style="color:var(--info); font-weight:bold;">Abrir recurso externo (YouTube/GeoGebra)</a></p>` : ''}
+                    ${t.archivo_url ? `<p style="margin-top:8px; font-size:12px;">📄 <a href="${t.archivo_url}" target="_blank" style="color:var(--primary); font-weight:bold;">Descargar material</a></p>` : ''}
+                    ${t.enlace_externo ? `<p style="margin-top:4px; font-size:12px;">🔗 <a href="${t.enlace_externo}" target="_blank" style="color:var(--info); font-weight:bold;">Abrir recurso externo</a></p>` : ''}
                     
                     ${formularioEntregaHtml}
                 </div>
             `;
 
             if (!t.completada) {
-                containerPendientes.innerHTML += htmlTarjeta;
+                if (containerPendientes) containerPendientes.innerHTML += htmlTarjeta;
             } else {
-                containerViejas.innerHTML += htmlTarjeta;
+                if (containerViejas) containerViejas.innerHTML += htmlTarjeta;
             }
         });
 
-        // Crear el índice por temas dinámico en el costado (Boceto 8)
-        temasEncontrados.forEach(tema => {
-            containerIndice.innerHTML += `
-                <div style="padding:8px; background:#f8fafc; border:1px solid var(--border-color); margin-bottom:5px; font-size:12px; border-radius:6px; font-weight:500; color:var(--text-main);">
-                    📁 ${tema}
-                </div>
-            `;
-        });
+        if (containerIndice) {
+            temasEncontrados.forEach(tema => {
+                containerIndice.innerHTML += `
+                    <div style="padding:8px; background:#f8fafc; border:1px solid var(--border-color); margin-bottom:5px; font-size:12px; border-radius:6px; font-weight:500;">
+                        📁 ${tema}
+                    </div>
+                `;
+            });
+        }
 
     } catch (err) {
         console.error("Error sincronizando el panel de alumnos:", err);
@@ -629,6 +686,7 @@ async function inicializarAlumno() {
 
 async function entregarTareaConArchivo(asignacionId) {
     const inputArchivo = document.getElementById(`file-entrega-${asignacionId}`);
+    if(!inputArchivo) return;
     const archivo = inputArchivo.files[0];
     if(!archivo) { alert("⚠️ Por favor, selecciona la foto o archivo de tu carpeta antes de enviar."); return; }
 
@@ -636,13 +694,13 @@ async function entregarTareaConArchivo(asignacionId) {
     formData.append('archivo', archivo);
 
     try {
-        alert("Enviando archivo a Cloudinary... Esperá la confirmación.");
+        alert("Enviando archivo... Esperá la confirmación.");
         const res = await fetch(`/api/asignaciones/${asignacionId}/entregar`, {
             method: 'POST',
             body: formData
         });
         if(res.ok) {
-            alert("🎉 Tu entrega fue cargada con éxito en el sistema central.");
+            alert("🎉 Tu entrega fue cargada con éxito.");
             inicializarAlumno();
         } else {
             alert("Error al procesar el archivo en el servidor.");
@@ -661,13 +719,16 @@ async function marcarVistoSimple(asignacionId) {
 // --- TUTOR MATEMÁTICO INTEGRADO CON GEMINI AI ---
 async function enviarMensajeGemini() {
     const input = document.getElementById('gemini-input-text');
+    if (!input) return;
     const text = input.value.trim();
     if(!text) return;
 
     const logs = document.getElementById('gemini-chat-logs');
-    logs.innerHTML += `<p style="margin-bottom:8px;"><strong>Tú:</strong> ${text}</p>`;
+    if (logs) {
+        logs.innerHTML += `<p style="margin-bottom:8px;"><strong>Tú:</strong> ${text}</p>`;
+        logs.scrollTop = logs.scrollHeight;
+    }
     input.value = '';
-    logs.scrollTop = logs.scrollHeight;
 
     try {
         const res = await fetch('/api/gemini', {
@@ -677,13 +738,13 @@ async function enviarMensajeGemini() {
         });
         const data = await res.json();
         
-        logs.innerHTML += `<p style="color:var(--primary); margin-bottom:8px;"><strong>Tutor DeltaMath AI:</strong> ${data.respuesta}</p>`;
-        logs.scrollTop = logs.scrollHeight;
+        if (logs) {
+            logs.innerHTML += `<p style="color:var(--primary); margin-bottom:8px;"><strong>Tutor DeltaMath AI:</strong> ${data.respuesta}</p>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
     } catch (err) {
-        logs.innerHTML += `<p style="color:var(--danger)"><strong>Error:</strong> No pude procesar tu consulta en este momento.</p>`;
+        if (logs) logs.innerHTML += `<p style="color:var(--danger)"><strong>Error:</strong> No pude procesar tu consulta.</p>`;
     }
 }
 
-function logout() {
-    location.reload();
-}
+function logout() { location.reload(); }
