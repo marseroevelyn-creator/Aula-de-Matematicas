@@ -1,63 +1,35 @@
+// =========================================================================
 // CONTROL GLOBAL DE ESTADOS DE LA AULA DE MATEMÁTICAS
+// =========================================================================
 let cursoActualId = null;
-let cursoSeleccionadoProfesorId = null;
 let bancoTareasCache = [];
 let listaAlumnosCache = [];
-let usuarioLogueadoId = null;
 
-// --- MANEJO DE CONTRASEÑA ("OJO") ---
-const btnTogglePwd = document.getElementById('btn-toggle-pwd');
-if (btnTogglePwd) {
-    btnTogglePwd.addEventListener('click', () => {
-        const pwdInput = document.getElementById('login-password');
-        if (pwdInput) {
-            if (pwdInput.type === 'password') {
-                pwdInput.type = 'text';
-                btnTogglePwd.textContent = '🙈';
-            } else {
-                pwdInput.type = 'password';
-                btnTogglePwd.textContent = '👁️';
-            }
-        }
-    });
-}
+// --- MANEJO VISUAL DE CONTRASEÑA ("OJO") ---
+document.getElementById('btn-toggle-pwd').addEventListener('click', () => {
+    const pwdInput = document.getElementById('login-password');
+    if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        document.getElementById('btn-toggle-pwd').textContent = '🙈';
+    } else {
+        pwdInput.type = 'password';
+        document.getElementById('btn-toggle-pwd').textContent = '👁️';
+    }
+});
 
-// --- REDIRECCIÓN AL ACCESO DEL PANEL DOCENTE (CORREGIDO) ---
-const btnIrAdmin = document.getElementById('btn-ir-admin');
-if (btnIrAdmin) {
-    btnIrAdmin.addEventListener('click', () => {
-        const usernameInput = document.getElementById('login-username');
-        const pwdInput = document.getElementById('login-password');
-        
-        if (usernameInput) usernameInput.value = 'profesora';
-        if (pwdInput) {
-            pwdInput.value = '';
-            pwdInput.focus();
-        }
-        
-        const cajaSugerencias = document.getElementById('login-sugerencias');
-        if (cajaSugerencias) {
-            cajaSugerencias.innerHTML = '';
-            cajaSugerencias.classList.add('hidden');
-        }
-    });
-}
-
-// --- SISTEMA DE AUTOCOMPLETADO PREDICTIVO PARA LOGIN (BOCETO 5) ---
+// --- SISTEMA DE AUTOCOMPLETADO PREDICTIVO PARA LOGIN ---
 async function precargarUsuariosParaLogin() {
     try {
         const res = await fetch('/api/usuarios');
         const usuarios = await res.json();
-        listaAlumnosCache = usuarios.filter(u => u.rol === 'alumno');
+        listaAlumnosCache = usuarios.filter(u => u.rol === 'alumno').map(u => u.username);
     } catch (err) {
-        console.error("No se pudieron precargar los usuarios para el autocompletado:", err);
+        console.error("No se pudieron precargar los usuarios:", err);
     }
 }
 
 function filtrarUsuariosLogin(busqueda) {
     const cajaSugerencias = document.getElementById('login-sugerencias');
-    if (!cajaSugerencias) return;
-
     const texto = busqueda.trim().toLowerCase();
 
     if (!texto) {
@@ -66,7 +38,7 @@ function filtrarUsuariosLogin(busqueda) {
         return;
     }
 
-    const filtrados = listaAlumnosCache.filter(u => u.username.toLowerCase().includes(texto));
+    const filtrados = listaAlumnosCache.filter(name => name.toLowerCase().includes(texto));
 
     if (filtrados.length === 0) {
         cajaSugerencias.innerHTML = '';
@@ -74,695 +46,740 @@ function filtrarUsuariosLogin(busqueda) {
         return;
     }
 
-    cajaSugerencias.innerHTML = filtrados.map(u => `
-        <div class="sugerencia-item" onclick="seleccionarUsuarioSugerido('${u.username}')">${u.username}</div>
-    `).join('');
+    cajaSugerencias.innerHTML = '';
+    filtrados.forEach(nombre => {
+        const div = document.createElement('div');
+        div.className = 'sugerencia-item';
+        div.textContent = nombre;
+        div.onclick = () => {
+            document.getElementById('login-username').value = nombre;
+            cajaSugerencias.innerHTML = '';
+            cajaSugerencias.classList.add('hidden');
+        };
+        cajaSugerencias.appendChild(div);
+    });
     cajaSugerencias.classList.remove('hidden');
 }
 
-function seleccionarUsuarioSugerido(username) {
-    const usernameInput = document.getElementById('login-username');
-    const pwdInput = document.getElementById('login-password');
-    const cajaSugerencias = document.getElementById('login-sugerencias');
-
-    if (usernameInput) usernameInput.value = username;
-    if (cajaSugerencias) cajaSugerencias.classList.add('hidden');
-    if (pwdInput) pwdInput.focus();
-}
-
-// Inicializar el buscador predictivo al cargar el script
-precargarUsuariosParaLogin();
-
-
-// --- MANEJO DE INGRESO Y LOGOUT ---
-const loginForm = document.getElementById('login-form');
-if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const usernameInput = document.getElementById('login-username');
-        const pwdInput = document.getElementById('login-password');
-        
-        if (!usernameInput || !pwdInput) return;
-        
-        const username = usernameInput.value.trim();
-        const password = pwdInput.value;
-
-        try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                document.getElementById('section-login').classList.add('hidden');
-                
-                if (data.rol === 'profesora') {
-                    document.getElementById('section-profesora').classList.remove('hidden');
-                    inicializarProfesora();
-                } else {
-                    if (data.debeCambiar) {
-                        document.getElementById('modal-primer-ingreso').classList.remove('hidden');
-                    } else {
-                        document.getElementById('section-alumno').classList.remove('hidden');
-                        inicializarAlumno();
-                    }
-                }
-            } else {
-                alert("⚠️ " + data.message);
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Error de red al intentar ingresar.");
-        }
-    });
-}
-
-// Forzar el cambio de clave inicial a alumnos nuevos
-const btnGuardarPrimeraClave = document.getElementById('btn-guardar-primera-clave');
-if (btnGuardarPrimeraClave) {
-    btnGuardarPrimeraClave.addEventListener('click', async () => {
-        const nuevaInput = document.getElementById('nueva-clave-alumno');
-        if (!nuevaInput) return;
-        const nueva = nuevaInput.value;
-        if (nueva.length < 4) {
-            alert("⚠️ La contraseña debe tener al menos 4 dígitos por seguridad.");
-            return;
-        }
-        try {
-            const res = await fetch('/api/auth/cambiar-clave', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nuevaClave: nueva })
-            });
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById('modal-primer-ingreso').classList.add('hidden');
-                document.getElementById('section-alumno').classList.remove('hidden');
-                inicializarAlumno();
-            } else {
-                alert("Error: " + data.error);
-            }
-        } catch (err) {
-            alert("Error al intentar actualizar la clave.");
-        }
-    });
-}
-
-
-// =========================================================================
-// --- SECCIÓN: CONFIGURACIÓN Y FUNCIONES DE LA PROFESORA ---
-// =========================================================================
-async function inicializarProfesora() {
-    await cargarCursosSelector();
-    await cargarTareasGlobales();
-    await cargarFechasImportantesAdmin();
-}
-
-async function cargarCursosSelector() {
-    try {
-        const res = await fetch('/api/cursos');
-        const cursos = await res.json();
-        const select = document.getElementById('filtro-curso-profesora');
-        if (!select) return;
-        select.innerHTML = '<option value="">-- Seleccione un curso --</option>';
-        cursos.forEach(c => {
-            select.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
-        });
-    } catch (err) {
-        console.error("Error cargando cursos:", err);
+// Cerrar sugerencias si se hace clic fuera
+document.addEventListener('click', (e) => {
+    if (e.target.id !== 'login-username') {
+        const caja = document.getElementById('login-sugerencias');
+        if(caja) caja.classList.add('hidden');
     }
-}
+});
 
-async function cambiarCursoActiveProfesor(cursoId) {
-    cambiarCursoActivoProfesor(cursoId);
-}
+// =========================================================================
+// PROCESAMIENTO CENTRAL DE AUTENTICACIÓN (LOGIN)
+// =========================================================================
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
 
-async function cambiarCursoActivoProfesor(cursoId) {
-    cursoSeleccionadoProfesorId = cursoId;
-    cursoActualId = cursoId;
-    
-    const tbodyAlumnos = document.getElementById('vista-alumnos-curso');
-    if (!tbodyAlumnos) return;
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
 
-    if (!cursoId) {
-        tbodyAlumnos.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Seleccione un curso arriba para auditar alumnos.</td></tr>';
+        if (data.success) {
+            document.getElementById('section-login').classList.add('hidden');
+            
+            if (data.rol === 'profesora') {
+                document.getElementById('section-profesora').classList.remove('hidden');
+                inicializarPanelProfesora();
+            } else {
+                if (data.debeCambiar) {
+                    document.getElementById('section-cambio-clave').classList.remove('hidden');
+                } else {
+                    document.getElementById('section-alumno').classList.remove('hidden');
+                    cargarDashboardEstudiante();
+                }
+            }
+        } else {
+            alert("Error: " + data.message);
+        }
+    } catch (err) {
+        alert("El servidor local está desconectado o cargando.");
+    }
+});
+
+// CAMBIO OBLIGATORIO DE CONTRASEÑA EN PRIMER INGRESO
+async function procesarCambioClave() {
+    const nuevaClave = document.getElementById('nueva-clave-input').value.trim();
+    if (nuevaClave.length < 4) {
+        alert("Por seguridad, la nueva contraseña debe tener al menos 4 dígitos.");
         return;
     }
 
-    try {
-        // 1. Cargar alumnos y progresos del servidor
-        const res = await fetch(`/api/cursos/${cursoId}/alumnos-progreso`);
-        const alumnos = await res.json();
-
-        if (alumnos.length === 0) {
-            tbodyAlumnos.innerHTML = '<tr><td colspan="3" style="text-align:center;">No hay alumnos registrados en este curso.</td></tr>';
-        } else {
-            tbodyAlumnos.innerHTML = alumnos.map(a => `
-                <tr>
-                    <td><strong>${a.username}</strong></td>
-                    <td><span style="color:var(--success); font-weight:bold;">${a.progreso || 0}%</span></td>
-                    <td>
-                        <button onclick="reiniciarClaveAlumno('${a.id}')" class="btn-eye" style="padding: 4px 8px; font-size:11px;" title="Reiniciar Clave a 'usuario'">🔄 Clave</button>
-                        <button onclick="eliminarAlumno('${a.id}')" class="btn-danger-sm">🗑️</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // 2. Actualizar las tareas e informes vinculados
-        await renderizarTareasAsignadasAlCurso();
-        await actualizarSelectTareasEntregas();
-
-    } catch (err) {
-        console.error(err);
-        tbodyAlumnos.innerHTML = '<tr><td colspan="3" style="color:var(--danger);">Error al sincronizar datos del curso.</td></tr>';
-    }
-}
-
-// --- MODALES DE CURSO ---
-function mostrarModalCurso() { document.getElementById('modal-curso').classList.remove('hidden'); }
-function cerrarModalCurso() { document.getElementById('modal-curso').classList.add('hidden'); }
-async function crearCurso() {
-    const nombreInput = document.getElementById('nuevo-curso-nombre');
-    const waInput = document.getElementById('nuevo-curso-whatsapp');
-    if (!nombreInput || !waInput) return;
-
-    const nombre = nombreInput.value.trim();
-    const wa = waInput.value.trim();
-    if (!nombre) { alert("El nombre del curso es obligatorio."); return; }
-
-    try {
-        await fetch('/api/cursos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nombre, whatsapp_link: wa })
-        });
-        cerrarModalCurso();
-        nombreInput.value = '';
-        waInput.value = '';
-        await cargarCursosSelector();
-    } catch (err) {
-        alert("Error al guardar el nuevo curso.");
-    }
-}
-
-// --- ALTA DE ESTUDIANTES DIRECTA (PROTEGIDA ANTE COMPONENTES NULOS) ---
-// --- ALTA DE ESTUDIANTES DIRECTA (CORRECCIÓN DE ID) ---
-const formCrearAlumno = document.getElementById('form-crear-alumno');
-if (formCrearAlumno) {
-    formCrearAlumno.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const input = document.getElementById('nuevo-alumno-username');
-        if (!input) return;
-        const username = input.value.trim().toLowerCase();
-
-        // Validación estricta en el cliente para evitar enviar valores vacíos o corruptos
-        if (!cursoSeleccionadoProfesorId || isNaN(parseInt(cursoSeleccionadoProfesorId))) {
-            alert("⚠️ Por favor, selecciona primero un curso activo en el panel superior.");
-            return;
-        }
-
-        try {
-            const res = await fetch('/api/usuarios', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    username, 
-                    password: 'usuario', 
-                    rol: 'alumno', 
-                    curso_id: parseInt(cursoSeleccionadoProfesorId) 
-                })
-            });
-            const data = await res.json();
-            
-            if (res.ok && (data.success || data.id)) {
-                alert(`👤 Alumno "${username}" registrado con éxito.\nSu clave automática inicial es "usuario".`);
-                input.value = '';
-                cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
-                precargarUsuariosParaLogin();
-            } else {
-                alert("Error del servidor: " + (data.error || "El nombre de usuario ya existe o los datos son inválidos."));
-            }
-        } catch (err) {
-            alert("Error de conexión al registrar al estudiante.");
-        }
+    const res = await fetch('/api/auth/cambiar-clave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nuevaClave })
     });
+    const data = await res.json();
+
+    if (data.success) {
+        alert("¡Contraseña actualizada con éxito!");
+        document.getElementById('section-cambio-clave').classList.add('hidden');
+        document.getElementById('section-alumno').classList.remove('hidden');
+        cargarDashboardEstudiante();
+    } else {
+        alert("Error al actualizar contraseña.");
+    }
+}
+
+function cerrarSesion() {
+    location.reload();
+}
+
+// =========================================================================
+// PANEL DOCENTE: GESTIÓN DE CURSOS Y MENÚS DESPLEGABLES
+// =========================================================================
+async function inicializarPanelProfesora() {
+    await cargarCursosProfesor();
+    await cargarBancoGlobalTareas();
+}
+
+async function cargarCursosProfesor() {
+    const res = await fetch('/api/cursos');
+    const cursos = await res.json();
+    const listaCursosDiv = document.getElementById('lista-cursos-render');
+    listaCursosDiv.innerHTML = '';
+
+    const selectorFiltro = document.getElementById('selector-curso-tareas');
+    const selectorAlumnos = document.getElementById('selector-curso-alumnos');
+    
+    if(selectorFiltro) selectorFiltro.innerHTML = '<option value="">-- Selecciona un Curso --</option>';
+    if(selectorAlumnos) selectorAlumnos.innerHTML = '<option value="">-- Selecciona un Curso --</option>';
+
+    cursos.forEach(c => {
+        // Inyectar en Selectores
+        if(selectorFiltro) selectorFiltro.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+        if(selectorAlumnos) selectorAlumnos.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+
+        // Renderizar Tarjeta de Curso con Menú Desplegable de Opciones
+        const card = document.createElement('div');
+        card.className = 'item-lista-admin';
+        card.innerHTML = `
+            <div>
+                <strong>📌 ${c.nombre}</strong><br>
+                <small class="text-muted">${c.whatsapp_link ? `🟢 Link WhatsApp Activo` : `❌ Sin enlace de WhatsApp`}</small>
+            </div>
+            <div class="dropdown">
+                <button class="btn-secondary btn-sm" onclick="toggleDropdownMenu(${c.id})">⚙️ Opciones ▾</button>
+                <div id="dropdown-curso-${c.id}" class="dropdown-content hidden">
+                    <button onclick="modalEditarCurso(${c.id}, '${c.nombre}', '${c.whatsapp_link || ''}')">✏️ Editar Nombre/Link</button>
+                    <button onclick="eliminarCursoCompleto(${c.id})" class="text-danger">🗑️ Eliminar Curso</button>
+                </div>
+            </div>
+        `;
+        card.onclick = (e) => {
+            if(!e.target.closest('.dropdown')) {
+                seleccionarCursoActivo(c.id, c.nombre);
+            }
+        };
+        listaCursosDiv.appendChild(card);
+    });
+}
+
+function toggleDropdownMenu(cursoId) {
+    // Cerrar otros abiertos
+    document.querySelectorAll('.dropdown-content').forEach(el => {
+        if(el.id !== `dropdown-curso-${cursoId}`) el.classList.add('hidden');
+    });
+    const menu = document.getElementById(`dropdown-curso-${cursoId}`);
+    if(menu) menu.classList.toggle('hidden');
+}
+
+// Cerrar menús de opciones si se hace clic afuera
+window.addEventListener('click', (e) => {
+    if (!e.target.matches('.dropdown button')) {
+        document.querySelectorAll('.dropdown-content').forEach(el => el.classList.add('hidden'));
+    }
+});
+
+async function crearCursoNuevo() {
+    const nombre = prompt("Nombre del nuevo curso (Ej: 4to Año A):");
+    if (!nombre) return;
+    const whatsapp_link = prompt("Pegá el link del grupo de WhatsApp (Opcional, dale aceptar si no tiene):") || "";
+
+    const res = await fetch('/api/cursos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, whatsapp_link })
+    });
+    if (res.ok) {
+        alert("Curso creado exitosamente.");
+        cargarCursosProfesor();
+    }
+}
+
+async function modalEditarCurso(id, nombreActual, linkActual) {
+    const nuevoNombre = prompt("Modificar nombre del curso:", nombreActual);
+    if (!nuevoNombre) return;
+    const nuevoLink = prompt("Modificar enlace de WhatsApp:", linkActual);
+
+    const res = await fetch(`/api/cursos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: nuevoNombre, whatsapp_link: nuevoLink })
+    });
+    if (res.ok) {
+        alert("Curso actualizado.");
+        cargarCursosProfesor();
+    }
+}
+
+async function eliminarCursoCompleto(id) {
+    if (!confirm("⚠️ ¿Estás seguro de eliminar este curso? Se desvincularán los alumnos y tareas asignadas.")) return;
+    const res = await fetch(`/api/cursos/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+        alert("Curso eliminado.");
+        cargarCursosProfesor();
+        if(cursoActualId === id) {
+            document.getElementById('modulo-gestion-curso-activo').classList.add('hidden');
+        }
+    }
+}
+
+// =========================================================================
+// PANEL DOCENTE: CONTROL INDIVIDUAL DE ALUMNOS Y PROGRESO
+// =========================================================================
+async function seleccionarCursoActivo(id, nombre) {
+    cursoActualId = id;
+    document.getElementById('modulo-gestion-curso-activo').classList.remove('hidden');
+    document.getElementById('nombre-curso-cabecera-admin').textContent = nombre;
+    
+    await cargarAlumnosDelCurso();
+    await actualizarTablaTareasAsignadas();
+}
+
+async function cargarAlumnosDelCurso() {
+    if (!cursoActualId) return;
+    const res = await fetch(`/api/cursos/${cursoActualId}/alumnos-progreso`);
+    const alumnos = await res.json();
+    const contenedor = document.getElementById('lista-alumnos-render');
+    contenedor.innerHTML = '';
+
+    alumnos.forEach(alu => {
+        const item = document.createElement('div');
+        item.className = 'item-lista-admin';
+        item.innerHTML = `
+            <div>
+                <strong>👤 ${alu.username}</strong>
+                <span class="badge ${alu.progreso === 100 ? 'bg-success' : 'bg-primary'}">${alu.progreso}% completado</span>
+            </div>
+            <div>
+                <button class="btn-secondary btn-sm" onclick="editarNombreAlumno(${alu.id}, '${alu.username}')">✏️</button>
+                <button class="btn-secondary btn-sm" onclick="reiniciarClaveAlumno(${alu.id})">🔑 Reiniciar</button>
+                <button class="btn-danger btn-sm" onclick="eliminarAlumnoCompleto(${alu.id})">🗑️</button>
+            </div>
+        `;
+        contenedor.appendChild(item);
+    });
+}
+
+async function agregarAlumnoAlCurso() {
+    if (!cursoActualId) return;
+    const username = prompt("Nombre completo del nuevo alumno/a:");
+    if (!username) return;
+
+    const res = await fetch('/api/usuarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password: 'usuario', rol: 'alumno', curso_id: cursoActualId })
+    });
+    const data = await res.json();
+    if (data.success) {
+        alert("Estudiante registrado. Su clave inicial es 'usuario'.");
+        cargarAlumnosDelCurso();
+    } else {
+        alert("Error: " + data.error);
+    }
+}
+
+async function editarNombreAlumno(id, nombreActual) {
+    const nuevoNombre = prompt("Modificar nombre completo del alumno/a:", nombreActual);
+    if (!nuevoNombre || nuevoNombre.trim() === '') return;
+
+    const res = await fetch(`/api/usuarios/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: nuevoNombre, curso_id: cursoActualId })
+    });
+    if (res.ok) {
+        alert("Nombre del estudiante corregido con éxito.");
+        cargarAlumnosDelCurso();
+    }
 }
 
 async function reiniciarClaveAlumno(id) {
-    if (!id || id === 'undefined') return alert("ID inválido.");
-    if (confirm("¿Deseas restablecer la contraseña de este estudiante a la clave inicial 'usuario'?")) {
-        const res = await fetch(`/api/usuarios/${id}/reiniciar`, { method: 'POST' });
-        const data = await res.json();
-        if (data.success) {
-            alert("🔑 Clave restablecida a 'usuario' con éxito.");
-            cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
-        }
-    }
+    if(!confirm("¿Deseas restablecer la contraseña de este alumno a la clave genérica 'usuario'? Al entrar se le pedirá cambiarla otra vez.")) return;
+    const res = await fetch(`/api/usuarios/${id}/reiniciar`, { method: 'POST' });
+    if(res.ok) alert("Contraseña restablecida correctamente.");
 }
 
-async function eliminarAlumno(id) {
-    if (confirm("¿Estás seguro de dar de baja a este estudiante de forma permanente?")) {
-        await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
-        cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
-        precargarUsuariosParaLogin();
-    }
+async function eliminarAlumnoCompleto(id) {
+    if(!confirm("¿Eliminar de forma permanente a este alumno del sistema?")) return;
+    const res = await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+    if(res.ok) cargarAlumnosDelCurso();
 }
 
-
-// --- BANCO GLOBAL DE RECURSOS ---
-function mostrarModalTarea() { document.getElementById('modal-tarea').classList.remove('hidden'); }
-function cerrarModalTarea() { document.getElementById('modal-tarea').classList.add('hidden'); }
-
-async function cargarTareasGlobales() {
-    try {
-        const res = await fetch('/api/tareas');
-        bancoTareasCache = await res.json();
-        renderizarBancoTareas();
-        
-        const pre = document.getElementById('t-prerrequisito');
-        if(pre) {
-            pre.innerHTML = '<option value="">Sin prerrequisito</option>';
-            bancoTareasCache.forEach(t => {
-                pre.innerHTML += `<option value="${t.id}">${t.titulo}</option>`;
-            });
-        }
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-function renderizarBancoTareas() {
-    const inputBuscar = document.getElementById('input-buscar-tarea');
-    const container = document.getElementById('banco-tareas-render');
-    if(!container) return;
-    
-    const query = inputBuscar ? inputBuscar.value.toLowerCase() : '';
-    container.innerHTML = '';
-    const unidades = {};
-
-    bancoTareasCache.forEach(t => {
-        if (t.titulo.toLowerCase().includes(query) || t.carpeta.toLowerCase().includes(query)) {
-            if (!unidades[t.carpeta]) unidades[t.carpeta] = [];
-            unidades[t.carpeta].push(t);
-        }
-    });
-
-    for (let unidad in unidades) {
-        let htmlUnidad = `<div class="carpeta-tema"><h4>📁 ${unidad}</h4>`;
-        unidades[unidad].forEach(t => {
-            htmlUnidad += `
-                <div class="recurso-item">
-                    <span><strong>${t.titulo}</strong> ${t.archivo_url ? '📄 (Adjunto)' : ''}</span>
-                    <button onclick="asignarTareaACurso(${t.id})" class="btn-success" style="padding:4px 8px; font-size:11px;">+ Asignar</button>
-                </div>
-            `;
-        });
-        htmlUnidad += `</div>`;
-        container.innerHTML += htmlUnidad;
-    }
-}
-
-// Formulario de nueva tarea blindado contra nulos
-const formNuevaTarea = document.getElementById('form-nueva-tarea');
-if (formNuevaTarea) {
-    formNuevaTarea.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData();
-        formData.append('titulo', document.getElementById('t-titulo').value);
-        formData.append('carpeta', document.getElementById('t-carpeta').value);
-        formData.append('descripcion', document.getElementById('t-desc').value);
-        formData.append('enlace_externo', document.getElementById('t-link').value);
-        formData.append('fecha_entrega', document.getElementById('t-fecha').value);
-        
-        const preId = document.getElementById('t-prerrequisito').value;
-        if(preId) formData.append('prerrequisito_id', preId);
-        
-        formData.append('requiere_entrega', document.getElementById('t-entrega').checked ? 'true' : 'false');
-        formData.append('asignar_a', 'banco_solo'); 
-
-        const fileInput = document.getElementById('t-file');
-        const file = fileInput ? fileInput.files[0] : null;
-        if (file) formData.append('archivo', file);
-
-        try {
-            const res = await fetch('/api/tareas', { method: 'POST', body: formData });
-            if (res.ok) {
-                cerrarModalTarea();
-                formNuevaTarea.reset();
-                await cargarTareasGlobales();
-                if(cursoSeleccionadoProfesorId) cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
-            } else {
-                alert("Error al subir el recurso al servidor.");
-            }
-        } catch(err) {
-            console.error(err);
-        }
-    });
-}
-
-async function asignarTareaACurso(tareaId) {
-    if (!cursoSeleccionadoProfesorId) {
-        alert("⚠️ Por favor, selecciona un curso activo en la barra superior antes de asignar.");
-        return;
-    }
-    try {
-        const res = await fetch('/api/asignaciones/asignar-grupo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ curso_id: parseInt(cursoSeleccionadoProfesorId), tarea_id: tareaId })
-        });
-        if(res.ok) {
-            alert("🎯 Actividad vinculada al curso activo de forma correcta.");
-            renderizarTareasAsignadasAlCurso();
-        }
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-async function renderizarTareasAsignadasAlCurso() {
-    const tbody = document.getElementById('tabla-tareas-asignadas');
-    if (!tbody || !cursoSeleccionadoProfesorId) return;
-
-    try {
-        const res = await fetch(`/api/cursos/${cursoSeleccionadoProfesorId}/tareas`);
-        const tareasAsignadas = await res.json();
-
-        if(tareasAsignadas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No hay tareas asignadas vigentes en este curso.</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = tareasAsignadas.map(t => `
-            <tr>
-                <td>${t.carpeta}</td>
-                <td><strong>${t.titulo}</strong></td>
-                <td>${t.prerrequisito_titulo ? `🛑 Requiere: ${t.prerrequisito_titulo}` : '✅ Libre'}</td>
-                <td>
-                    <button onclick="desvincularTareaCurso('${t.id}')" class="btn-danger-sm">Quitar</button>
-                </td>
-            </tr>
-        `).join('');
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-async function desvincularTareaCurso(tareaId) {
-    if(confirm("¿Deseas remover esta actividad del curso actual?")) {
-        await fetch(`/api/asignaciones/curso/${cursoSeleccionadoProfesorId}/tarea/${tareaId}`, { method: 'DELETE' });
-        renderizarTareasAsignadasAlCurso();
-    }
-}
-
-
-// --- GESTIÓN DE FECHAS IMPORTANTES ---
-async function cargarFechasImportantesAdmin() {
-    const lista = document.getElementById('lista-fechas-admin');
-    if(!lista) return;
-    try {
-        const res = await fetch('/api/fechas');
-        const fechas = await res.json();
-        lista.innerHTML = fechas.map(f => `
-            <li style="font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between;">
-                <span>📅 <strong>${f.fecha.split('T')[0]}:</strong> ${f.evento}</span>
-                <button onclick="eliminarFecha('${f.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">🗑️</button>
-            </li>
-        `).join('');
-    } catch(err) {
-        console.error(err);
-    }
-}
-
-const formNuevaFecha = document.getElementById('form-nueva-fecha');
-if (formNuevaFecha) {
-    formNuevaFecha.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const fecha = document.getElementById('f-fecha').value;
-        const evento = document.getElementById('f-evento').value;
-        await fetch('/api/fechas', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fecha, evento })
-        });
-        document.getElementById('f-evento').value = '';
-        cargarFechasImportantesAdmin();
-    });
-}
-
-async function eliminarFecha(id) {
-    await fetch(`/api/fechas/${id}`, { method: 'DELETE' });
-    cargarFechasImportantesAdmin();
-}
-
-
-// --- AUDITORÍA Y CORRECCIÓN DE ENTREGAS ---
-async function actualizarSelectTareasEntregas() {
-    const select = document.getElementById('select-tareas-entregas');
-    if(!select) return;
-    try {
-        const res = await fetch('/api/tareas');
-        const tareas = await res.json();
-        select.innerHTML = '<option value="">-- Ver entregas por actividad --</option>';
-        tareas.forEach(t => {
-            select.innerHTML += `<option value="${t.id}">${t.titulo} (${t.carpeta})</option>`;
-        });
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-async function cargarEntregasDeTarea() {
-    const select = document.getElementById('select-tareas-entregas');
-    const render = document.getElementById('tabla-entregas-render');
-    if(!render || !select) return;
-    
-    const tareaId = select.value;
-    if(!tareaId) { render.innerHTML = ''; return; }
-
-    const res = await fetch(`/api/asignaciones/tarea/${tareaId}/entregas`);
-    const entregas = await res.json();
-
-    if(entregas.length === 0) {
-        render.innerHTML = '<p style="font-size:13px; color:var(--text-muted);">No se registran entregas cargadas.</p>';
-        return;
-    }
-
-    render.innerHTML = entregas.map(e => `
-        <div class="card" style="border: 1px solid var(--border); padding:12px; font-size:13px;">
-            <p><strong>Estudiante:</strong> ${e.alumno_nombre}</p>
-            <p><strong>Estado:</strong> ${e.completada ? '✅ Aprobado' : '⏳ Pendiente'}</p>
-            ${e.archivo_entrega_url ? `<p>🔗 <a href="${e.archivo_entrega_url}" target="_blank" style="color:var(--primary); font-weight:bold;">Ver captura enviada</a></p>` : '<p style="color:var(--text-muted);">Sin adjuntos</p>'}
-            <div style="margin-top:8px;">
-                <input type="text" id="dev-${e.id}" placeholder="Escribe una devolución..." value="${e.devolucion || ''}" style="margin-bottom:5px; padding:6px;">
-                <div style="display:flex; gap:5px;">
-                    <button onclick="guardarCorreccion('${e.id}', true)" class="btn-success" style="padding:4px 8px; font-size:11px;">Aprobar</button>
-                    <button onclick="guardarCorreccion('${e.id}', false)" class="btn-secondary" style="padding:4px 8px; font-size:11px;">Recomendar corrección</button>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function guardarCorreccion(asignacionId, aprobar) {
-    const devInput = document.getElementById(`dev-${asignacionId}`);
-    const dev = devInput ? devInput.value : '';
-    await fetch(`/api/asignaciones/${asignacionId}/corregir`, {
+// ASIGNACIÓN O EXCLUSIÓN INDIVIDUAL A DEDO
+async function cambiarAsignacionIndividual(alumnoId, tareaId, estado) {
+    // estado puede ser: 'asignar', 'excluir', 'eliminar'
+    const res = await fetch('/api/asignaciones/individual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ devolucion: dev, completada: aprobar })
+        body: JSON.stringify({ alumno_id: alumnoId, tarea_id: tareaId, estado: estado })
     });
-    alert("Corrección registrada en la base de datos.");
-    cargarEntregasDeTarea();
+    const data = await res.json();
+    if (data.success) {
+        console.log(`Filtro individual procesado: ${estado}`);
+        cargarAlumnosDelCurso();
+    }
 }
-// Llamar a esto cuando la profesora pulse "Reasignar Tarea" porque está mal hecha
+
+// =========================================================================
+// PANEL DOCENTE: BANCO GLOBAL Y ACCIONES DE EDICIÓN DE TAREAS
+// =========================================================================
+async function cargarBancoGlobalTareas() {
+    const res = await fetch('/api/tareas');
+    bancoTareasCache = await res.json();
+    filtrarYRenderizarBancoTareas();
+}
+
+function filtrarYRenderizarBancoTareas() {
+    const busqueda = document.getElementById('buscador-banco-tareas').value.toLowerCase();
+    const contenedor = document.getElementById('banco-tareas-render');
+    contenedor.innerHTML = '';
+
+    const selectorPre = document.getElementById('form-tarea-prerrequisito');
+    if(selectorPre) selectorPre.innerHTML = '<option value="null">Ninguno (Actividad Libre)</option>';
+
+    bancoTareasCache.forEach(t => {
+        if(selectorPre) selectorPre.innerHTML += `<option value="${t.id}">${t.titulo} (${t.carpeta})</option>`;
+
+        if (t.titulo.toLowerCase().includes(busqueda) || t.carpeta.toLowerCase().includes(busqueda)) {
+            const item = document.createElement('div');
+            item.className = 'item-lista-admin';
+            item.innerHTML = `
+                <div>
+                    <strong>📂 [${t.carpeta}] - ${t.titulo}</strong><br>
+                    <small class="text-muted">${t.requiere_entrega ? '📝 Requiere entrega de archivo' : '👁️ Solo Lectura / Marcar Visto'}</small>
+                </div>
+                <div>
+                    <button class="btn-primary btn-sm" onclick="asignarTareaAlCursoActual(${t.id})">+ Asignar al Curso</button>
+                    <button class="btn-secondary btn-sm" onclick="cargarTareaEnFormularioEdicion(${t.id})">✏️ Editar</button>
+                    <button class="btn-danger btn-sm" onclick="eliminarTareaDelBanco(${t.id})">🗑️</button>
+                </div>
+            `;
+            contenedor.appendChild(item);
+        }
+    });
+}
+
+// CREAR TAREA O GUARDAR EDICIÓN (REPARADO CON PUT Y MULTIPART)
+document.getElementById('form-crear-tarea').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('form-tarea-id').value; // Si existe, estamos editando
+    const formData = new FormData(e.target);
+
+    const url = id ? `/api/tareas/${id}` : '/api/tareas';
+    const metodo = id ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+        method: metodo,
+        body: formData
+    });
+
+    if (res.ok) {
+        alert(id ? "Tarea modificada en el repositorio global." : "Tarea guardada en el banco de recursos.");
+        e.target.reset();
+        document.getElementById('form-tarea-id').value = '';
+        document.getElementById('btn-guardar-tarea').textContent = 'Crear y Guardar Tarea';
+        await cargarBancoGlobalTareas();
+        if(cursoActualId) await actualizarTablaTareasAsignadas();
+    } else {
+        alert("Ocurrió un error guardando el recurso.");
+    }
+});
+
+function cargarTareaEnFormularioEdicion(id) {
+    const tarea = bancoTareasCache.find(t => t.id === id);
+    if(!tarea) return;
+
+    document.getElementById('form-tarea-id').value = tarea.id;
+    document.getElementById('form-tarea-titulo').value = tarea.titulo;
+    document.getElementById('form-tarea-descripcion').value = tarea.descripcion || '';
+    document.getElementById('form-tarea-carpeta').value = tarea.carpeta;
+    document.getElementById('form-tarea-enlace').value = tarea.enlace_externo || '';
+    document.getElementById('form-tarea-entrega').value = tarea.requiere_entrega ? 'true' : 'false';
+    document.getElementById('form-tarea-prerrequisito').value = tarea.prerrequisito_id || 'null';
+    
+    if(tarea.fecha_entrega) {
+        document.getElementById('form-tarea-fecha').value = tarea.fecha_entrega.substring(0,16);
+    }
+
+    document.getElementById('btn-guardar-tarea').textContent = '💾 Actualizar Cambios de Tarea';
+    document.getElementById('form-tarea-titulo').focus();
+}
+
+async function eliminarTareaDelBanco(id) {
+    if(!confirm("¿Eliminar esta tarea del banco de datos definitivo? Esto quitará la actividad de todos los cursos asignados.")) return;
+    const res = await fetch(`/api/tareas/${id}`, { method: 'DELETE' });
+    if(res.ok) {
+        await cargarBancoGlobalTareas();
+        if(cursoActualId) await actualizarTablaTareasAsignadas();
+    }
+}
+
+async function asignarTareaAlCursoActual(tareaId) {
+    if (!cursoActualId) {
+        alert("Por favor, selecciona primero un curso en el panel izquierdo.");
+        return;
+    }
+    const res = await fetch('/api/asignaciones/asignar-grupo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ curso_id: cursoActualId, tarea_id: tareaId })
+    });
+    if (res.ok) {
+        alert("Actividad vinculada a todo el grupo.");
+        await actualizarTablaTareasAsignadas();
+        await cargarAlumnosDelCurso();
+    }
+}
+
+async function desasignarTareaDelCurso(tareaId) {
+    if(!confirm("¿Quitar esta actividad de este curso específico? Los alumnos ya no la verán.")) return;
+    const res = await fetch(`/api/asignaciones/curso/${cursoActualId}/tarea/${tareaId}`, { method: 'DELETE' });
+    if(res.ok) {
+        await actualizarTablaTareasAsignadas();
+        await cargarAlumnosDelCurso();
+    }
+}
+
+async function actualizarTablaTareasAsignadas() {
+    if (!cursoActualId) return;
+    const res = await fetch(`/api/cursos/${cursoActualId}/tareas`);
+    const tareas = await res.json();
+    const contenedor = document.getElementById('tabla-tareas-asignadas');
+    contenedor.innerHTML = '';
+
+    tareas.forEach(t => {
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td>📁 ${t.carpeta}</td>
+            <td><strong>${t.titulo}</strong></td>
+            <td><span class="badge bg-secondary">${t.prerrequisito_titulo || 'Ninguno'}</span></td>
+            <td>
+                <button class="btn-danger btn-sm" onclick="desasignarTareaDelCurso(${t.id})">Quitar de este curso</button>
+                <button class="btn-primary btn-sm" onclick="verEntregasDeTareaActiva(${t.id}, '${t.titulo}')">📥 Ver Entregas</button>
+            </td>
+        `;
+        contenedor.appendChild(fila);
+    });
+}
+
+// =========================================================================
+// PANEL DOCENTE: REVISIÓN Y REASIGNACIÓN DE ENTREGAS RECHAZADAS
+// =========================================================================
+async function verEntregasDeTareaActiva(tareaId, tituloTarea) {
+    document.getElementById('nombre-tarea-revision-cabecera').textContent = tituloTarea;
+    const res = await fetch(`/api/asignaciones/tarea/${tareaId}/entregas`);
+    const entregas = await res.json();
+    const contenedor = document.getElementById('tabla-entregas-render');
+    contenedor.innerHTML = '';
+
+    if(entregas.length === 0) {
+        contenedor.innerHTML = `<p class="text-muted" style="padding:15px;">No hay envíos ni marcas de visualización para esta tarea aún.</p>`;
+        return;
+    }
+
+    entregas.forEach(ent => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style = "border: 1px solid var(--border-color); margin-bottom:10px; padding:15px;";
+        
+        let estadoEnvio = ent.completada ? '✅ Aprobada / Lista' : '⏳ Pendiente de Corrección';
+        if(!ent.completada && ent.visto && !ent.archivo_entrega_url) estadoEnvio = '👁️ Marcada como vista';
+
+        card.innerHTML = `
+            <h5>👤 Alumno: ${ent.alumno_nombre}</h5>
+            <p>Estado actual: <strong>${estadoEnvio}</strong></p>
+            ${ent.archivo_entrega_url ? `<p>📎 Adjunto: <a href="${ent.archivo_entrega_url}" target="_blank" class="btn-primary btn-sm" style="display:inline-block; margin-top:5px; text-decoration:none; padding:4px 8px; border-radius:4px;">Abrir Documento de Entrega</a></p>` : '<p class="text-muted">No se requería/subió archivo.</p>'}
+            
+            <div style="margin-top:12px; display:flex; gap:8px;">
+                <button onclick="enviarCalificacionAEstudiante(${ent.id}, true)" class="btn-success btn-sm">Aprobar / Dar por válida</button>
+                <button onclick="reasignarTareaAlumno(${ent.id})" class="btn-danger btn-sm">❌ Reasignar (Hizo algo mal)</button>
+            </div>
+        `;
+        contenedor.appendChild(card);
+    });
+}
+
+async function enviarCalificacionAEstudiante(asignacionId, completada) {
+    const devolucion = prompt("Escribí una devolución o mensaje de aliento para el alumno (Opcional):") || "Revisado por la profesora.";
+    const res = await fetch(`/api/asignaciones/${asignacionId}/corregir`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ devolucion, completada })
+    });
+    if(res.ok) {
+        alert("Corrección enviada.");
+        location.reload();
+    }
+}
+
+// CORRECCIÓN SOLICITADA: REASIGNAR SI EL TRABAJO TIENE ERRORES
 async function reasignarTareaAlumno(asignacionId) {
-    const motivo = prompt("Escribí el motivo del rechazo o sugerencia para el alumno:");
-    if (motivo === null) return;
+    const motivo = prompt("Escribí las correcciones detalladas. Al alumno se le borrará la entrega errónea y podrá enviarla de nuevo:");
+    if (motivo === null) return; // Cancelar
     
     const res = await fetch(`/api/asignaciones/${asignacionId}/reasignar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ motivo })
+        body: JSON.stringify({ motivo: motivo })
     });
     const data = await res.json();
     if (data.success) {
-        alert("Tarea reasignada al alumno con éxito.");
+        alert("La tarea ha sido reasignada. El alumno ya tiene habilitado el casillero para reentregar.");
         location.reload();
     }
 }
 
 // =========================================================================
-// --- SECCIÓN: CONFIGURACIÓN Y CONTENIDOS DEL ALUMNO (FEED INTERACTIVO) ---
+// VISTA DEL ESTUDIANTE: FEED EVALUANDO PRERREQUISITOS Y TEMAS EN EL ÍNDICE
 // =========================================================================
-async function inicializarAlumno() {
-    try {
-        const res = await fetch('/api/alumno/dashboard');
-        if(!res.ok) return;
-        const db = await res.json();
+async function cargarDashboardEstudiante() {
+    const res = await fetch('/api/alumno/dashboard');
+    if(!res.ok) return;
+    const data = await res.json();
 
-        const nameLbl = document.getElementById('lbl-estudiante-nombre');
-        const cursoLbl = document.getElementById('lbl-estudiante-curso');
-        if (nameLbl) nameLbl.textContent = db.usuario;
-        if (cursoLbl) cursoLbl.textContent = db.curso.nombre;
-        
-        const btnWa = document.getElementById('lnk-estudiante-wa');
-        if (btnWa) {
-            if(db.curso.whatsapp_link) {
-                btnWa.href = db.curso.whatsapp_link;
-                btnWa.style.display = 'inline-block';
-            } else {
-                btnWa.style.display = 'none';
-            }
+    document.getElementById('alumno-nombre-cabecera').textContent = data.usuario;
+    document.getElementById('alumno-curso-nombre').textContent = data.curso.nombre;
+    
+    // Inyectar link de WhatsApp dinámico en el encabezado
+    const areaWhatsapp = document.getElementById('alumno-whatsapp-container');
+    if(areaWhatsapp) {
+        if(data.curso.whatsapp_link) {
+            areaWhatsapp.innerHTML = `<a href="${data.curso.whatsapp_link}" target="_blank" class="btn-success" style="text-decoration:none; padding:6px 12px; display:inline-block; border-radius:5px; font-weight:bold;">💬 Entrar al Grupo de WhatsApp del Curso</a>`;
+        } else {
+            areaWhatsapp.innerHTML = '';
         }
+    }
 
-        const containerPendientes = document.getElementById('alumno-tareas-urgentes');
-        const containerViejas = document.getElementById('alumno-tareas-viejas');
-        const containerIndice = document.getElementById('alumno-indice-temas');
+    renderizarPanelEstudiante(data);
+}
 
-        if (containerPendientes) containerPendientes.innerHTML = '';
-        if (containerViejas) containerViejas.innerHTML = '';
-        if (containerIndice) containerIndice.innerHTML = '';
+function renderizarPanelEstudiante(data) {
+    const contenedorIndice = document.getElementById('alumno-indice-temas');
+    const contenedorUrgentes = document.getElementById('alumno-tareas-urgentes');
+    const contenedorViejas = document.getElementById('alumno-tareas-viejas');
+    
+    if(!contenedorIndice) return;
+    
+    contenedorIndice.innerHTML = '';
+    contenedorUrgentes.innerHTML = '';
+    contenedorViejas.innerHTML = '';
 
-        if(db.tareas.length === 0) {
-            if (containerPendientes) containerPendientes.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No tenés actividades asignadas. ¡Al día!</p>';
+    // 📂 1. ARMAR ÍNDICE LATERAL BASADO EN LAS CARPETAS (UNIDADES DE TRABAJO)
+    const temasUnicos = [...new Set(data.tareas.map(t => t.carpeta))];
+    if(temasUnicos.length === 0 || data.tareas.length === 0) {
+        contenedorIndice.innerHTML = `<p class="text-muted" style="font-size:13px; padding:5px;">No hay unidades publicadas.</p>`;
+    } else {
+        temasUnicos.forEach(tema => {
+            const itemTema = document.createElement('div');
+            itemTema.className = 'item-indice-lateral';
+            itemTema.style = "padding: 8px; border-bottom: 1px solid var(--border-color); font-size:14px; cursor:default;";
+            itemTema.innerHTML = `📁 <strong>${tema}</strong>`;
+            contenedorIndice.appendChild(itemTema);
+        });
+    }
+
+    // 📑 2. FILTRAR Y CLASIFICAR LAS TAREAS CRONOLÓGICAMENTE EVALUANDO EL PRERREQUISITO
+    data.tareas.forEach(tarea => {
+        // CORRECCIÓN SOLICITADA: Si tiene un prerrequisito asignado y NO está completado, NO se muestra (Evita ver la última salteándose pasos)
+        if (tarea.prerrequisito_id && tarea.prerrequisito_completado === false) {
             return;
         }
 
-        let temasEncontrados = new Set();
-
-        db.tareas.forEach(t => {
-            temasEncontrados.add(t.carpeta);
-            
-            let formularioEntregaHtml = '';
-            if (!t.completada) {
-                if (t.requiere_entrega) {
-                    formularioEntregaHtml = `
-                        <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1;">
-                            <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px;">Cargar foto de tu ejercicio:</label>
-                            <input type="file" id="file-entrega-${t.asignacion_id}" style="font-size:11px; margin-bottom:5px;">
-                            <button onclick="entregarTareaConArchivo('${t.asignacion_id}')" class="btn-success" style="padding:4px 10px; font-size:12px;">Subir y Entregar</button>
-                        </div>
-                    `;
-                } else {
-                    formularioEntregaHtml = `
-                        <div style="margin-top:10px; text-align:right;">
-                            <button onclick="marcarVistoSimple('${t.asignacion_id}')" class="btn-primary" style="padding:4px 12px; font-size:12px;">Marcar como Realizado/Visto</button>
-                        </div>
-                    `;
-                }
-            } else {
-                formularioEntregaHtml = `
-                    <div style="margin-top:8px; padding:6px 10px; background:#f0fdf4; border-radius:4px; font-size:12px; color:#166534;">
-                        <strong>Devolución docente:</strong> ${t.devolucion || '¡Excelente trabajo! Actividad revisada.'}
-                    </div>
-                `;
-            }
-
-            let htmlTarjeta = `
-                <div class="card" style="border-left: 5px solid ${t.completada ? 'var(--success)' : 'orange'}; margin-bottom:15px; padding:15px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <div>
-                            <span style="font-size:11px; background:#e2e8f0; padding:2px 6px; border-radius:4px; color:var(--text-muted); font-weight:bold;">${t.carpeta}</span>
-                            <h4 style="margin:5px 0 3px 0; font-size:15px; color:var(--text-main);">${t.titulo}</h4>
-                        </div>
-                        ${t.fecha_entrega ? `<span style="font-size:11px; color:var(--danger);">📅 Límite: ${t.fecha_entrega.split('T')[0]}</span>` : ''}
-                    </div>
-                    <p style="font-size:13px; color:#475569; margin-top:6px;">${t.descripcion || 'Sin descripción adicional disponible.'}</p>
-                    
-                    ${t.archivo_url ? `<p style="margin-top:8px; font-size:12px;">📄 <a href="${t.archivo_url}" target="_blank" style="color:var(--primary); font-weight:bold;">Descargar material</a></p>` : ''}
-                    ${t.enlace_externo ? `<p style="margin-top:4px; font-size:12px;">🔗 <a href="${t.enlace_externo}" target="_blank" style="color:var(--info); font-weight:bold;">Abrir recurso externo</a></p>` : ''}
-                    
-                    ${formularioEntregaHtml}
-                </div>
-            `;
-
-            if (!t.completada) {
-                if (containerPendientes) containerPendientes.innerHTML += htmlTarjeta;
-            } else {
-                if (containerViejas) containerViejas.innerHTML += htmlTarjeta;
-            }
-        });
-
-        if (containerIndice) {
-            temasEncontrados.forEach(tema => {
-                containerIndice.innerHTML += `
-                    <div style="padding:8px; background:#f8fafc; border:1px solid var(--border-color); margin-bottom:5px; font-size:12px; border-radius:6px; font-weight:500;">
-                        📁 ${tema}
-                    </div>
-                `;
-            });
-        }
-
-    } catch (err) {
-        console.error("Error sincronizando el panel de alumnos:", err);
-    }
-}
-
-async function entregarTareaConArchivo(asignacionId) {
-    const inputArchivo = document.getElementById(`file-entrega-${asignacionId}`);
-    if(!inputArchivo) return;
-    const archivo = inputArchivo.files[0];
-    if(!archivo) { alert("⚠️ Por favor, selecciona la foto o archivo de tu carpeta antes de enviar."); return; }
-
-    const formData = new FormData();
-    formData.append('archivo', archivo);
-
-    try {
-        alert("Enviando archivo... Esperá la confirmación.");
-        const res = await fetch(`/api/asignaciones/${asignacionId}/entregar`, {
-            method: 'POST',
-            body: formData
-        });
-        if(res.ok) {
-            alert("🎉 Tu entrega fue cargada con éxito.");
-            inicializarAlumno();
+        // Armar tarjeta de contenido
+        const divTarea = document.createElement('div');
+        divTarea.className = 'card-tarea';
+        divTarea.style = "border: 1px solid var(--border-color); padding:16px; margin-bottom:15px; border-radius:var(--radius); background:#fff;";
+        
+        let bloqueEntregaHtml = '';
+        if (tarea.completada || tarea.visto) {
+            bloqueEntregaHtml = `<p class="text-success" style="font-weight:bold; margin-top:10px;">✅ Completado. Ya no podés modificar el envío.</p>`;
         } else {
-            alert("Error al procesar el archivo en el servidor.");
+            if (tarea.requiere_entrega) {
+                bloqueEntregaHtml = `
+                    <form onsubmit="entregarArchivoTareaEstudiante(event, ${tarea.asignacion_id})" style="margin-top:10px; background:#f1f5f9; padding:10px; border-radius:6px;">
+                        <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:4px;">Subir archivo de resolución:</label>
+                        <input type="file" name="archivo" required style="font-size:13px; display:block; margin-bottom:8px;">
+                        <button type="submit" class="btn-primary btn-sm">📤 Subir y Entregar Trabajo</button>
+                    </form>
+                `;
+            } else {
+                bloqueEntregaHtml = `
+                    <button onclick="marcarTareaComoVistaEstudiante(${tarea.asignacion_id}, '${tarea.enlace_externo || ''}')" class="btn-success btn-sm" style="margin-top:10px;">
+                        ${tarea.enlace_externo && tarea.enlace_externo.includes('youtube') ? '📺 Entendido / Marcar video visto' : '✔️ Marcar actividad completada'}
+                    </button>
+                `;
+            }
         }
-    } catch(err) {
-        console.error(err);
+
+        divTarea.innerHTML = `
+            <span class="text-muted" style="font-size:12px; font-weight:bold; text-transform:uppercase;">🏷️ Unidad: ${tarea.carpeta}</span>
+            <h4 style="margin:4px 0 8px 0; color:var(--primary);">${tarea.titulo}</h4>
+            <p style="font-size:14px; margin-bottom:10px;">${tarea.descripcion || 'Sin descripción provista.'}</p>
+            
+            ${tarea.enlace_externo ? `<p>🔗 Recurso externo: <a href="${tarea.enlace_externo}" target="_blank" onclick="alertarAuricularesSiEsVideo('${tarea.enlace_externo}')" style="color:var(--info); font-weight:bold;">Hacé clic acá para abrir enlace</a></p>` : ''}
+            ${tarea.archivo_url ? `<p>📁 Archivo adjunto por la Prof: <a href="${tarea.archivo_url}" target="_blank" style="color:var(--primary);">Descargar material adjunto</a></p>` : ''}
+            ${tarea.devolucion ? `<div style="background:#fef2f2; border-left:4px solid var(--danger); padding:8px; margin-top:10px; font-size:13px; color:#991b1b;">📢 <strong>Corrección de la profesora:</strong> ${tarea.devolucion}</div>` : ''}
+            
+            ${bloqueEntregaHtml}
+        `;
+
+        if (tarea.completada || tarea.visto) {
+            contenedorViejas.appendChild(divTarea);
+        } else {
+            contenedorUrgentes.appendChild(divTarea);
+        }
+    });
+
+    if(contenedorUrgentes.innerHTML === '') {
+        contenedorUrgentes.innerHTML = `<p class="text-muted">🎉 ¡Excelente! No tenés actividades pendientes en este momento.</p>`;
     }
 }
 
-async function marcarVistoSimple(asignacionId) {
-    await fetch(`/api/asignaciones/${asignacionId}/visto`, { method: 'POST' });
-    inicializarAlumno();
+function alertarAuricularesSiEsVideo(url) {
+    if(url.includes('youtube') || url.includes('youtu.be') || url.includes('vimeo') || url.includes('.mp4')) {
+        alert("🎧 Recordá usar auriculares si estás adentro del salón de clases.");
+    }
 }
 
+async function entregarArchivoTareaEstudiante(e, asignacionId) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = "Subiendo solución...";
 
-// --- TUTOR MATEMÁTICO INTEGRADO CON GEMINI AI ---
+    const res = await fetch(`/api/asignaciones/${asignacionId}/entregar`, {
+        method: 'POST',
+        body: formData
+    });
+    if(res.ok) {
+        alert("¡Tu entrega fue enviada correctamente a la profesora!");
+        cargarDashboardEstudiante();
+    } else {
+        alert("Falló la carga del archivo.");
+        btn.disabled = false;
+        btn.textContent = "Subir y Entregar Trabajo";
+    }
+}
+
+async function marcarTareaComoVistaEstudiante(asignacionId, enlaceExterno) {
+    if(enlaceExterno) alertarAuricularesSiEsVideo(enlaceExterno);
+    const res = await fetch(`/api/asignaciones/${asignacionId}/visto`, { method: 'POST' });
+    if(res.ok) cargarDashboardEstudiante();
+}
+
+// =========================================================================
+// CHAT CON INTELIGENCIA ARTIFICIAL (TUTOR MATEMÁTICO GEMINI DE 24 HORAS)
+// =========================================================================
 async function enviarMensajeGemini() {
     const input = document.getElementById('gemini-input-text');
-    if (!input) return;
-    const text = input.value.trim();
-    if(!text) return;
+    const prompt = input.value.trim();
+    if (!prompt) return;
 
     const logs = document.getElementById('gemini-chat-logs');
-    if (logs) {
-        logs.innerHTML += `<p style="margin-bottom:8px;"><strong>Tú:</strong> ${text}</p>`;
-        logs.scrollTop = logs.scrollHeight;
-    }
+    logs.innerHTML += `<div class="chat-msg user"><strong>Tú:</strong> ${prompt}</div>`;
     input.value = '';
+    logs.scrollTop = logs.scrollHeight;
 
-    try {
-        const res = await fetch('/api/gemini', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: text })
+    const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+    });
+    const data = await res.json();
+    logs.innerHTML += `<div class="chat-msg ai"><strong>Tutor IA:</strong> ${data.respuesta}</div>`;
+    logs.scrollTop = logs.scrollHeight;
+}
+
+// =========================================================================
+// CRONOGRAMA DE FECHAS IMPORTANTES Y RESPALDOS GENERALES
+// =========================================================================
+async function cargarFechasImportantes() {
+    const res = await fetch('/api/fechas');
+    const fechas = await res.json();
+    const contenedor = document.getElementById('lista-fechas-render');
+    if(contenedor) {
+        contenedor.innerHTML = '';
+        fechas.forEach(f => {
+            const fFormateada = new Date(f.fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+            contenedor.innerHTML += `
+                <div class="item-lista-admin">
+                    <span>📅 <strong>${fFormateada}</strong>: ${f.evento}</span>
+                    <button class="btn-danger btn-sm" onclick="eliminarFechaImportante(${f.id})">🗑️</button>
+                </div>`;
         });
-        const data = await res.json();
-        
-        if (logs) {
-            logs.innerHTML += `<p style="color:var(--primary); margin-bottom:8px;"><strong>Tutor DeltaMath AI:</strong> ${data.respuesta}</p>`;
-            logs.scrollTop = logs.scrollHeight;
-        }
-    } catch (err) {
-        if (logs) logs.innerHTML += `<p style="color:var(--danger)"><strong>Error:</strong> No pude procesar tu consulta.</p>`;
     }
 }
 
-function logout() { location.reload(); }
+async function agregarFechaImportante() {
+    const fecha = document.getElementById('form-fecha-calendario').value;
+    const evento = document.getElementById('form-fecha-evento').value.trim();
+    if(!fecha || !evento) return;
+
+    await fetch('/api/fechas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fecha, evento })
+    });
+    document.getElementById('form-fecha-evento').value = '';
+    cargarFechasImportantes();
+}
+
+async function eliminarFechaImportante(id) {
+    await fetch(`/api/fechas/${id}`, { method: 'DELETE' });
+    cargarFechasImportantes();
+}
+
+// COPIAS DE SEGURIDAD (MIGRACIÓN DESDE INTERFAZ)
+async function subirCopiaSeguridad(input) {
+    const archivo = input.files[0];
+    if (!archivo) return;
+    if (!confirm("⚠️ ¿Restaurar este respaldo? Se borrarán todos los datos actuales.")) {
+        input.value = ''; 
+        return;
+    }
+    const lector = new FileReader();
+    lector.onload = async (e) => {
+        try {
+            const datosJSON = JSON.parse(e.target.result);
+            const res = await fetch('/api/sistema/restaurar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosJSON)
+            });
+            const data = await res.json();
+            if (data.success) { alert("🎉 Sistema restaurado."); location.reload(); }
+        } catch (err) { alert("Archivo JSON no válido."); }
+    };
+    lector.readAsText(archivo);
+}
+
+// DISPARADOR INICIAL AL ENTRAR A LA WEB
+precargarUsuariosParaLogin();
+if(document.getElementById('lista-fechas-render')) {
+    cargarFechasImportantes();
+}
