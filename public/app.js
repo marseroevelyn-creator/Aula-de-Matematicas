@@ -1,5 +1,5 @@
 // =========================================================================
-// CONTROL GLOBAL DE ESTADOS DE LA AULA DE MATEMÁTICAS
+// 🌐 CONTROL GLOBAL DE ESTADOS - AULA DE MATEMÁTICAS
 // =========================================================================
 let cursoActualId = null;
 let bancoTareasCache = [];
@@ -61,7 +61,6 @@ function filtrarUsuariosLogin(busqueda) {
     cajaSugerencias.classList.remove('hidden');
 }
 
-// Cerrar sugerencias si se hace clic fuera
 document.addEventListener('click', (e) => {
     if (e.target.id !== 'login-username') {
         const caja = document.getElementById('login-sugerencias');
@@ -70,7 +69,7 @@ document.addEventListener('click', (e) => {
 });
 
 // =========================================================================
-// PROCESAMIENTO CENTRAL DE AUTENTICACIÓN (LOGIN)
+// 🔑 PROCESAMIENTO CENTRAL DE AUTENTICACIÓN (LOGIN)
 // =========================================================================
 document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -107,7 +106,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     }
 });
 
-// CAMBIO OBLIGATORIO DE CONTRASEÑA EN PRIMER INGRESO
 async function procesarCambioClave() {
     const nuevaClave = document.getElementById('nueva-clave-input').value.trim();
     if (nuevaClave.length < 4) {
@@ -137,7 +135,7 @@ function cerrarSesion() {
 }
 
 // =========================================================================
-// PANEL DOCENTE: GESTIÓN DE CURSOS Y MENÚS DESPLEGABLES
+// 📂 PANEL DOCENTE: GESTIÓN DE CURSOS (EDITAR Y BORRAR DESDE DESPLEGABLE)
 // =========================================================================
 async function inicializarPanelProfesora() {
     await cargarCursosProfesor();
@@ -157,37 +155,31 @@ async function cargarCursosProfesor() {
     if(selectorAlumnos) selectorAlumnos.innerHTML = '<option value="">-- Selecciona un Curso --</option>';
 
     cursos.forEach(c => {
-        // Inyectar en Selectores
         if(selectorFiltro) selectorFiltro.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
         if(selectorAlumnos) selectorAlumnos.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
 
-        // Renderizar Tarjeta de Curso con Menú Desplegable de Opciones
         const card = document.createElement('div');
         card.className = 'item-lista-admin';
+        card.style.position = 'relative';
         card.innerHTML = `
-            <div>
+            <div style="cursor: pointer; flex-grow: 1;" onclick="seleccionarCursoActivo(${c.id}, '${c.nombre}')">
                 <strong>📌 ${c.nombre}</strong><br>
-                <small class="text-muted">${c.whatsapp_link ? `🟢 Link WhatsApp Activo` : `❌ Sin enlace de WhatsApp`}</small>
+                <small class="text-muted">${c.whatsapp_link ? `🟢 Link WhatsApp Activo` : `❌ Sin enlace`}</small>
             </div>
             <div class="dropdown">
-                <button class="btn-secondary btn-sm" onclick="toggleDropdownMenu(${c.id})">⚙️ Opciones ▾</button>
-                <div id="dropdown-curso-${c.id}" class="dropdown-content hidden">
+                <button class="btn-secondary btn-sm" onclick="toggleDropdownMenu(event, ${c.id})">⚙️ Opciones ▾</button>
+                <div id="dropdown-curso-${c.id}" class="dropdown-content hidden" style="position: absolute; right: 0; background: white; border: 1px solid #ccc; z-index: 100;">
                     <button onclick="modalEditarCurso(${c.id}, '${c.nombre}', '${c.whatsapp_link || ''}')">✏️ Editar Nombre/Link</button>
                     <button onclick="eliminarCursoCompleto(${c.id})" class="text-danger">🗑️ Eliminar Curso</button>
                 </div>
             </div>
         `;
-        card.onclick = (e) => {
-            if(!e.target.closest('.dropdown')) {
-                seleccionarCursoActivo(c.id, c.nombre);
-            }
-        };
         listaCursosDiv.appendChild(card);
     });
 }
 
-function toggleDropdownMenu(cursoId) {
-    // Cerrar otros abiertos
+function toggleDropdownMenu(event, cursoId) {
+    event.stopPropagation();
     document.querySelectorAll('.dropdown-content').forEach(el => {
         if(el.id !== `dropdown-curso-${cursoId}`) el.classList.add('hidden');
     });
@@ -195,27 +187,21 @@ function toggleDropdownMenu(cursoId) {
     if(menu) menu.classList.toggle('hidden');
 }
 
-// Cerrar menús de opciones si se hace clic afuera
-window.addEventListener('click', (e) => {
-    if (!e.target.matches('.dropdown button')) {
-        document.querySelectorAll('.dropdown-content').forEach(el => el.classList.add('hidden'));
-    }
+window.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown-content').forEach(el => el.classList.add('hidden'));
 });
 
 async function crearCursoNuevo() {
     const nombre = prompt("Nombre del nuevo curso (Ej: 4to Año A):");
     if (!nombre) return;
-    const whatsapp_link = prompt("Pegá el link del grupo de WhatsApp (Opcional, dale aceptar si no tiene):") || "";
+    const whatsapp_link = prompt("Pegá el link de WhatsApp (Opcional):") || "";
 
-    const res = await fetch('/api/cursos', {
+    await fetch('/api/cursos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, whatsapp_link })
     });
-    if (res.ok) {
-        alert("Curso creado exitosamente.");
-        cargarCursosProfesor();
-    }
+    cargarCursosProfesor();
 }
 
 async function modalEditarCurso(id, nombreActual, linkActual) {
@@ -223,31 +209,25 @@ async function modalEditarCurso(id, nombreActual, linkActual) {
     if (!nuevoNombre) return;
     const nuevoLink = prompt("Modificar enlace de WhatsApp:", linkActual);
 
-    const res = await fetch(`/api/cursos/${id}`, {
+    await fetch(`/api/cursos/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre: nuevoNombre, whatsapp_link: nuevoLink })
     });
-    if (res.ok) {
-        alert("Curso actualizado.");
-        cargarCursosProfesor();
-    }
+    cargarCursosProfesor();
 }
 
 async function eliminarCursoCompleto(id) {
-    if (!confirm("⚠️ ¿Estás seguro de eliminar este curso? Se desvincularán los alumnos y tareas asignadas.")) return;
-    const res = await fetch(`/api/cursos/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-        alert("Curso eliminado.");
-        cargarCursosProfesor();
-        if(cursoActualId === id) {
-            document.getElementById('modulo-gestion-curso-activo').classList.add('hidden');
-        }
+    if (!confirm("⚠️ ¿Estás seguro de eliminar este curso? Se desvincularán alumnos y asignaciones.")) return;
+    await fetch(`/api/cursos/${id}`, { method: 'DELETE' });
+    cargarCursosProfesor();
+    if(cursoActualId === id) {
+        document.getElementById('modulo-gestion-curso-activo').classList.add('hidden');
     }
 }
 
 // =========================================================================
-// PANEL DOCENTE: CONTROL INDIVIDUAL DE ALUMNOS Y PROGRESO
+// 👥 PANEL DOCENTE: ALUMNOS (EDITAR, REINICIAR Y ASIGNACIONES INDIVIDUALES)
 // =========================================================================
 async function seleccionarCursoActivo(id, nombre) {
     cursoActualId = id;
@@ -271,11 +251,12 @@ async function cargarAlumnosDelCurso() {
         item.innerHTML = `
             <div>
                 <strong>👤 ${alu.username}</strong>
-                <span class="badge ${alu.progreso === 100 ? 'bg-success' : 'bg-primary'}">${alu.progreso}% completado</span>
+                <span class="badge bg-primary">${alu.progreso}%</span>
             </div>
             <div>
+                <button class="btn-secondary btn-sm" onclick="gestionarExcepcionesAlumno(${alu.id}, '${alu.username}')" title="Asignar/Excluir tareas a mano">🎯 Individual</button>
                 <button class="btn-secondary btn-sm" onclick="editarNombreAlumno(${alu.id}, '${alu.username}')">✏️</button>
-                <button class="btn-secondary btn-sm" onclick="reiniciarClaveAlumno(${alu.id})">🔑 Reiniciar</button>
+                <button class="btn-secondary btn-sm" onclick="reiniciarClaveAlumno(${alu.id})">🔑</button>
                 <button class="btn-danger btn-sm" onclick="eliminarAlumnoCompleto(${alu.id})">🗑️</button>
             </div>
         `;
@@ -293,59 +274,64 @@ async function agregarAlumnoAlCurso() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password: 'usuario', rol: 'alumno', curso_id: cursoActualId })
     });
-    const data = await res.json();
-    if (data.success) {
-        alert("Estudiante registrado. Su clave inicial es 'usuario'.");
+    if (res.ok) {
+        alert("Registrado. Clave inicial: 'usuario'.");
         cargarAlumnosDelCurso();
-    } else {
-        alert("Error: " + data.error);
     }
 }
 
 async function editarNombreAlumno(id, nombreActual) {
-    const nuevoNombre = prompt("Modificar nombre completo del alumno/a:", nombreActual);
+    const nuevoNombre = prompt("Modificar nombre completo:", nombreActual);
     if (!nuevoNombre || nuevoNombre.trim() === '') return;
 
-    const res = await fetch(`/api/usuarios/${id}`, {
+    await fetch(`/api/usuarios/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: nuevoNombre, curso_id: cursoActualId })
     });
-    if (res.ok) {
-        alert("Nombre del estudiante corregido con éxito.");
-        cargarAlumnosDelCurso();
-    }
+    cargarAlumnosDelCurso();
 }
 
 async function reiniciarClaveAlumno(id) {
-    if(!confirm("¿Deseas restablecer la contraseña de este alumno a la clave genérica 'usuario'? Al entrar se le pedirá cambiarla otra vez.")) return;
-    const res = await fetch(`/api/usuarios/${id}/reiniciar`, { method: 'POST' });
-    if(res.ok) alert("Contraseña restablecida correctamente.");
+    if(!confirm("¿Deseas restablecer la contraseña a 'usuario'?")) return;
+    await fetch(`/api/usuarios/${id}/reiniciar`, { method: 'POST' });
+    alert("Contraseña restablecida.");
 }
 
 async function eliminarAlumnoCompleto(id) {
-    if(!confirm("¿Eliminar de forma permanente a este alumno del sistema?")) return;
-    const res = await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
-    if(res.ok) cargarAlumnosDelCurso();
+    if(!confirm("¿Eliminar alumno permanentemente?")) return;
+    await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+    cargarAlumnosDelCurso();
 }
 
-// ASIGNACIÓN O EXCLUSIÓN INDIVIDUAL A DEDO
-async function cambiarAsignacionIndividual(alumnoId, tareaId, estado) {
-    // estado puede ser: 'asignar', 'excluir', 'eliminar'
+// 🎯 CONTROL INDIVIDUAL: ASIGNAR O EXCLUIR ACTIVIDADES "A MANO"
+async function gestionarExcepcionesAlumno(alumnoId, alumnoNombre) {
+    let listado = "Modificar tareas para: " + alumnoNombre + "\n\n";
+    listado += "Escribí el ID de la tarea y luego la acción.\nDisponibles actualmente en el banco:\n";
+    
+    bancoTareasCache.forEach(t => {
+        listado += `ID: ${t.id} - [${t.carpeta}] ${t.titulo}\n`;
+    });
+    
+    const tareaId = prompt(listado + "\nIngresá el ID numérico de la tarea a gestionar:");
+    if(!tareaId) return;
+    
+    const accion = prompt("Escribí:\n'asignar' (para forzar su entrega)\n'excluir' (para sacársela solo a él)\n'eliminar' (quitar registro)");
+    if(!accion) return;
+
     const res = await fetch('/api/asignaciones/individual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ alumno_id: alumnoId, tarea_id: tareaId, estado: estado })
+        body: JSON.stringify({ alumno_id: parseInt(tareaId) ? alumnoId : alumnoId, tarea_id: parseInt(tareaId), estado: accion })
     });
-    const data = await res.json();
-    if (data.success) {
-        console.log(`Filtro individual procesado: ${estado}`);
+    if(res.ok) {
+        alert("Cambio individual aplicado.");
         cargarAlumnosDelCurso();
     }
 }
 
 // =========================================================================
-// PANEL DOCENTE: BANCO GLOBAL Y ACCIONES DE EDICIÓN DE TAREAS
+// 📝 PANEL DOCENTE: BANCO GLOBAL Y ACCIONES DE EDICIÓN DE TAREAS
 // =========================================================================
 async function cargarBancoGlobalTareas() {
     const res = await fetch('/api/tareas');
@@ -368,12 +354,12 @@ function filtrarYRenderizarBancoTareas() {
             const item = document.createElement('div');
             item.className = 'item-lista-admin';
             item.innerHTML = `
-                <div>
+                <div style="flex-grow: 1;">
                     <strong>📂 [${t.carpeta}] - ${t.titulo}</strong><br>
-                    <small class="text-muted">${t.requiere_entrega ? '📝 Requiere entrega de archivo' : '👁️ Solo Lectura / Marcar Visto'}</small>
+                    <small class="text-muted">ID: ${t.id} | ${t.requiere_entrega ? '📝 Adjunto obligatorio' : '👁️ Marcar Visto'}</small>
                 </div>
                 <div>
-                    <button class="btn-primary btn-sm" onclick="asignarTareaAlCursoActual(${t.id})">+ Asignar al Curso</button>
+                    <button class="btn-primary btn-sm" onclick="asignarTareaAlCursoActual(${t.id})">+ Asignar</button>
                     <button class="btn-secondary btn-sm" onclick="cargarTareaEnFormularioEdicion(${t.id})">✏️ Editar</button>
                     <button class="btn-danger btn-sm" onclick="eliminarTareaDelBanco(${t.id})">🗑️</button>
                 </div>
@@ -383,10 +369,10 @@ function filtrarYRenderizarBancoTareas() {
     });
 }
 
-// CREAR TAREA O GUARDAR EDICIÓN (REPARADO CON PUT Y MULTIPART)
+// EDITAR O CREAR TAREAS DINÁMICAMENTE (REPARADO CON FORM DATA MULTIPART)
 document.getElementById('form-crear-tarea').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const id = document.getElementById('form-tarea-id').value; // Si existe, estamos editando
+    const id = document.getElementById('form-tarea-id').value;
     const formData = new FormData(e.target);
 
     const url = id ? `/api/tareas/${id}` : '/api/tareas';
@@ -398,14 +384,14 @@ document.getElementById('form-crear-tarea').addEventListener('submit', async (e)
     });
 
     if (res.ok) {
-        alert(id ? "Tarea modificada en el repositorio global." : "Tarea guardada en el banco de recursos.");
+        alert(id ? "¡Tarea editada y actualizada en el Banco!" : "Tarea guardada con éxito.");
         e.target.reset();
         document.getElementById('form-tarea-id').value = '';
         document.getElementById('btn-guardar-tarea').textContent = 'Crear y Guardar Tarea';
         await cargarBancoGlobalTareas();
         if(cursoActualId) await actualizarTablaTareasAsignadas();
     } else {
-        alert("Ocurrió un error guardando el recurso.");
+        alert("Error al procesar la operación.");
     }
 });
 
@@ -425,43 +411,36 @@ function cargarTareaEnFormularioEdicion(id) {
         document.getElementById('form-tarea-fecha').value = tarea.fecha_entrega.substring(0,16);
     }
 
-    document.getElementById('btn-guardar-tarea').textContent = '💾 Actualizar Cambios de Tarea';
-    document.getElementById('form-tarea-titulo').focus();
+    document.getElementById('btn-guardar-tarea').textContent = '💾 Guardar Cambios Editados';
+    document.getElementById('form-crear-tarea').scrollIntoView({ behavior: 'smooth' });
 }
 
 async function eliminarTareaDelBanco(id) {
-    if(!confirm("¿Eliminar esta tarea del banco de datos definitivo? Esto quitará la actividad de todos los cursos asignados.")) return;
-    const res = await fetch(`/api/tareas/${id}`, { method: 'DELETE' });
-    if(res.ok) {
-        await cargarBancoGlobalTareas();
-        if(cursoActualId) await actualizarTablaTareasAsignadas();
-    }
+    if(!confirm("¿Eliminar del banco? Desaparecerá de todos los cursos.")) return;
+    await fetch(`/api/tareas/${id}`, { method: 'DELETE' });
+    await cargarBancoGlobalTareas();
+    if(cursoActualId) await actualizarTablaTareasAsignadas();
 }
 
 async function asignarTareaAlCursoActual(tareaId) {
     if (!cursoActualId) {
-        alert("Por favor, selecciona primero un curso en el panel izquierdo.");
+        alert("Primero seleccioná un curso a la izquierda.");
         return;
     }
-    const res = await fetch('/api/asignaciones/asignar-grupo', {
+    await fetch('/api/asignaciones/asignar-grupo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ curso_id: cursoActualId, tarea_id: tareaId })
     });
-    if (res.ok) {
-        alert("Actividad vinculada a todo el grupo.");
-        await actualizarTablaTareasAsignadas();
-        await cargarAlumnosDelCurso();
-    }
+    await actualizarTablaTareasAsignadas();
+    await cargarAlumnosDelCurso();
 }
 
 async function desasignarTareaDelCurso(tareaId) {
-    if(!confirm("¿Quitar esta actividad de este curso específico? Los alumnos ya no la verán.")) return;
-    const res = await fetch(`/api/asignaciones/curso/${cursoActualId}/tarea/${tareaId}`, { method: 'DELETE' });
-    if(res.ok) {
-        await actualizarTablaTareasAsignadas();
-        await cargarAlumnosDelCurso();
-    }
+    if(!confirm("¿Desvincular esta tarea del grupo?")) return;
+    await fetch(`/api/asignaciones/curso/${cursoActualId}/tarea/${tareaId}`, { method: 'DELETE' });
+    await actualizarTablaTareasAsignadas();
+    await cargarAlumnosDelCurso();
 }
 
 async function actualizarTablaTareasAsignadas() {
@@ -478,8 +457,8 @@ async function actualizarTablaTareasAsignadas() {
             <td><strong>${t.titulo}</strong></td>
             <td><span class="badge bg-secondary">${t.prerrequisito_titulo || 'Ninguno'}</span></td>
             <td>
-                <button class="btn-danger btn-sm" onclick="desasignarTareaDelCurso(${t.id})">Quitar de este curso</button>
-                <button class="btn-primary btn-sm" onclick="verEntregasDeTareaActiva(${t.id}, '${t.titulo}')">📥 Ver Entregas</button>
+                <button class="btn-danger btn-sm" onclick="desasignarTareaDelCurso(${t.id})">Quitar</button>
+                <button class="btn-primary btn-sm" onclick="verEntregasDeTareaActiva(${t.id}, '${t.titulo}')">📥 Entregas</button>
             </td>
         `;
         contenedor.appendChild(fila);
@@ -487,7 +466,7 @@ async function actualizarTablaTareasAsignadas() {
 }
 
 // =========================================================================
-// PANEL DOCENTE: REVISIÓN Y REASIGNACIÓN DE ENTREGAS RECHAZADAS
+// 📥 PANEL DOCENTE: REVISIÓN DE ENTREGAS Y CORRECCIÓN / REASIGNACIÓN
 // =========================================================================
 async function verEntregasDeTareaActiva(tareaId, tituloTarea) {
     document.getElementById('nombre-tarea-revision-cabecera').textContent = tituloTarea;
@@ -497,26 +476,26 @@ async function verEntregasDeTareaActiva(tareaId, tituloTarea) {
     contenedor.innerHTML = '';
 
     if(entregas.length === 0) {
-        contenedor.innerHTML = `<p class="text-muted" style="padding:15px;">No hay envíos ni marcas de visualización para esta tarea aún.</p>`;
+        contenedor.innerHTML = `<p class="text-muted" style="padding:15px;">Sin movimientos de alumnos para esta actividad.</p>`;
         return;
     }
 
     entregas.forEach(ent => {
         const card = document.createElement('div');
         card.className = 'card';
-        card.style = "border: 1px solid var(--border-color); margin-bottom:10px; padding:15px;";
+        card.style = "border: 1px solid var(--border-color); margin-bottom:10px; padding:15px; background: #fff;";
         
-        let estadoEnvio = ent.completada ? '✅ Aprobada / Lista' : '⏳ Pendiente de Corrección';
-        if(!ent.completada && ent.visto && !ent.archivo_entrega_url) estadoEnvio = '👁️ Marcada como vista';
+        let estadoEnvio = ent.completada ? '✅ Aprobada / Lista' : '⏳ Pendiente de Revisión';
+        if(!ent.completada && ent.visto && !ent.archivo_entrega_url) estadoEnvio = '👁️ Solo Visualizada';
 
         card.innerHTML = `
-            <h5>👤 Alumno: ${ent.alumno_nombre}</h5>
-            <p>Estado actual: <strong>${estadoEnvio}</strong></p>
-            ${ent.archivo_entrega_url ? `<p>📎 Adjunto: <a href="${ent.archivo_entrega_url}" target="_blank" class="btn-primary btn-sm" style="display:inline-block; margin-top:5px; text-decoration:none; padding:4px 8px; border-radius:4px;">Abrir Documento de Entrega</a></p>` : '<p class="text-muted">No se requería/subió archivo.</p>'}
+            <h5>👤 Estudiante: ${ent.alumno_nombre}</h5>
+            <p>Condición: <strong>${estadoEnvio}</strong></p>
+            ${ent.archivo_entrega_url ? `<p>📎 Adjunto: <a href="${ent.archivo_entrega_url}" target="_blank" class="btn-primary btn-sm" style="display:inline-block; margin-top:5px; text-decoration:none; padding:4px 8px; border-radius:4px;">Abrir Resolución</a></p>` : '<p class="text-muted">No lleva archivo adjunto.</p>'}
             
             <div style="margin-top:12px; display:flex; gap:8px;">
-                <button onclick="enviarCalificacionAEstudiante(${ent.id}, true)" class="btn-success btn-sm">Aprobar / Dar por válida</button>
-                <button onclick="reasignarTareaAlumno(${ent.id})" class="btn-danger btn-sm">❌ Reasignar (Hizo algo mal)</button>
+                <button onclick="enviarCalificacionAEstudiante(${ent.id}, true)" class="btn-success btn-sm">Aprobar</button>
+                <button onclick="reasignarTareaAlumno(${ent.id})" class="btn-danger btn-sm">❌ Reasignar (Rehacer)</button>
             </div>
         `;
         contenedor.appendChild(card);
@@ -524,22 +503,20 @@ async function verEntregasDeTareaActiva(tareaId, tituloTarea) {
 }
 
 async function enviarCalificacionAEstudiante(asignacionId, completada) {
-    const devolucion = prompt("Escribí una devolución o mensaje de aliento para el alumno (Opcional):") || "Revisado por la profesora.";
-    const res = await fetch(`/api/asignaciones/${asignacionId}/corregir`, {
+    const devolucion = prompt("Comentario o devolución para el alumno (Opcional):") || "Aprobado por la profesora.";
+    await fetch(`/api/asignaciones/${asignacionId}/corregir`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ devolucion, completada })
     });
-    if(res.ok) {
-        alert("Corrección enviada.");
-        location.reload();
-    }
+    alert("Calificación guardada.");
+    location.reload();
 }
 
-// CORRECCIÓN SOLICITADA: REASIGNAR SI EL TRABAJO TIENE ERRORES
+// 🔄 NUEVO REQUERIMIENTO: PERMITIR AL ALUMNO REHACER LA ACTIVIDAD SI HIZO MAL
 async function reasignarTareaAlumno(asignacionId) {
-    const motivo = prompt("Escribí las correcciones detalladas. Al alumno se le borrará la entrega errónea y podrá enviarla de nuevo:");
-    if (motivo === null) return; // Cancelar
+    const motivo = prompt("Indicá qué errores cometió. Se habilitará el casillero para que la envíe de nuevo:");
+    if (motivo === null) return;
     
     const res = await fetch(`/api/asignaciones/${asignacionId}/reasignar`, {
         method: 'POST',
@@ -548,13 +525,13 @@ async function reasignarTareaAlumno(asignacionId) {
     });
     const data = await res.json();
     if (data.success) {
-        alert("La tarea ha sido reasignada. El alumno ya tiene habilitado el casillero para reentregar.");
+        alert("Tarea reasignada. Se borró la entrega errónea del panel del alumno.");
         location.reload();
     }
 }
 
 // =========================================================================
-// VISTA DEL ESTUDIANTE: FEED EVALUANDO PRERREQUISITOS Y TEMAS EN EL ÍNDICE
+// 🎓 FEED ALUMNO: RENDERIZADO EVALUANDO PRERREQUISITOS Y TEMAS EN EL ÍNDICE
 // =========================================================================
 async function cargarDashboardEstudiante() {
     const res = await fetch('/api/alumno/dashboard');
@@ -564,11 +541,10 @@ async function cargarDashboardEstudiante() {
     document.getElementById('alumno-nombre-cabecera').textContent = data.usuario;
     document.getElementById('alumno-curso-nombre').textContent = data.curso.nombre;
     
-    // Inyectar link de WhatsApp dinámico en el encabezado
     const areaWhatsapp = document.getElementById('alumno-whatsapp-container');
     if(areaWhatsapp) {
         if(data.curso.whatsapp_link) {
-            areaWhatsapp.innerHTML = `<a href="${data.curso.whatsapp_link}" target="_blank" class="btn-success" style="text-decoration:none; padding:6px 12px; display:inline-block; border-radius:5px; font-weight:bold;">💬 Entrar al Grupo de WhatsApp del Curso</a>`;
+            areaWhatsapp.innerHTML = `<a href="${data.curso.whatsapp_link}" target="_blank" class="btn-success" style="text-decoration:none; padding:6px 12px; display:inline-block; border-radius:5px; font-weight:bold;">💬 Entrar al WhatsApp del Curso</a>`;
         } else {
             areaWhatsapp.innerHTML = '';
         }
@@ -588,61 +564,60 @@ function renderizarPanelEstudiante(data) {
     contenedorUrgentes.innerHTML = '';
     contenedorViejas.innerHTML = '';
 
-    // 📂 1. ARMAR ÍNDICE LATERAL BASADO EN LAS CARPETAS (UNIDADES DE TRABAJO)
+    // 📂 REPARACIÓN: OBTENER Y MAPEAR TEMAS EN LA BARRA LATERAL (NO QUEDA VACÍO)
     const temasUnicos = [...new Set(data.tareas.map(t => t.carpeta))];
     if(temasUnicos.length === 0 || data.tareas.length === 0) {
-        contenedorIndice.innerHTML = `<p class="text-muted" style="font-size:13px; padding:5px;">No hay unidades publicadas.</p>`;
+        contenedorIndice.innerHTML = `<p class="text-muted" style="font-size:13px; padding:5px;">Sin unidades cargadas.</p>`;
     } else {
         temasUnicos.forEach(tema => {
             const itemTema = document.createElement('div');
             itemTema.className = 'item-indice-lateral';
-            itemTema.style = "padding: 8px; border-bottom: 1px solid var(--border-color); font-size:14px; cursor:default;";
-            itemTema.innerHTML = `📁 <strong>${tema}</strong>`;
+            itemTema.style = "padding: 8px; border-bottom: 1px solid var(--border-color); font-size:14px; color: var(--secondary); font-weight: 500;";
+            itemTema.innerHTML = `📁 ${tema}`;
             contenedorIndice.appendChild(itemTema);
         });
     }
 
-    // 📑 2. FILTRAR Y CLASIFICAR LAS TAREAS CRONOLÓGICAMENTE EVALUANDO EL PRERREQUISITO
+    // 📑 REPARACIÓN: EVALUAR PRERREQUISITO REAL (EVITA VER LA ÚLTIMA TAREA DIRECTAMENTE)
     data.tareas.forEach(tarea => {
-        // CORRECCIÓN SOLICITADA: Si tiene un prerrequisito asignado y NO está completado, NO se muestra (Evita ver la última salteándose pasos)
+        // Si la tarea depende de otra anterior y esa anterior NO está marcada como completada, se oculta temporalmente del listado
         if (tarea.prerrequisito_id && tarea.prerrequisito_completado === false) {
             return;
         }
 
-        // Armar tarjeta de contenido
         const divTarea = document.createElement('div');
         divTarea.className = 'card-tarea';
         divTarea.style = "border: 1px solid var(--border-color); padding:16px; margin-bottom:15px; border-radius:var(--radius); background:#fff;";
         
         let bloqueEntregaHtml = '';
         if (tarea.completada || tarea.visto) {
-            bloqueEntregaHtml = `<p class="text-success" style="font-weight:bold; margin-top:10px;">✅ Completado. Ya no podés modificar el envío.</p>`;
+            bloqueEntregaHtml = `<p class="text-success" style="font-weight:bold; margin-top:10px;">✅ Actividad Completada</p>`;
         } else {
             if (tarea.requiere_entrega) {
                 bloqueEntregaHtml = `
                     <form onsubmit="entregarArchivoTareaEstudiante(event, ${tarea.asignacion_id})" style="margin-top:10px; background:#f1f5f9; padding:10px; border-radius:6px;">
-                        <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:4px;">Subir archivo de resolución:</label>
+                        <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:4px;">Subir trabajo resuelto:</label>
                         <input type="file" name="archivo" required style="font-size:13px; display:block; margin-bottom:8px;">
-                        <button type="submit" class="btn-primary btn-sm">📤 Subir y Entregar Trabajo</button>
+                        <button type="submit" class="btn-primary btn-sm">Subir y Entregar</button>
                     </form>
                 `;
             } else {
                 bloqueEntregaHtml = `
                     <button onclick="marcarTareaComoVistaEstudiante(${tarea.asignacion_id}, '${tarea.enlace_externo || ''}')" class="btn-success btn-sm" style="margin-top:10px;">
-                        ${tarea.enlace_externo && tarea.enlace_externo.includes('youtube') ? '📺 Entendido / Marcar video visto' : '✔️ Marcar actividad completada'}
+                        ${tarea.enlace_externo && tarea.enlace_externo.includes('youtube') ? '📺 Marcar video visto' : '✔️ Completar Actividad'}
                     </button>
                 `;
             }
         }
 
         divTarea.innerHTML = `
-            <span class="text-muted" style="font-size:12px; font-weight:bold; text-transform:uppercase;">🏷️ Unidad: ${tarea.carpeta}</span>
-            <h4 style="margin:4px 0 8px 0; color:var(--primary);">${tarea.titulo}</h4>
+            <span class="text-muted" style="font-size:11px; font-weight:bold; text-transform:uppercase;">🏷️ Unidad: ${tarea.carpeta}</span>
+            <h4 style="margin:2px 0 8px 0; color:var(--primary);">${tarea.titulo}</h4>
             <p style="font-size:14px; margin-bottom:10px;">${tarea.descripcion || 'Sin descripción provista.'}</p>
             
-            ${tarea.enlace_externo ? `<p>🔗 Recurso externo: <a href="${tarea.enlace_externo}" target="_blank" onclick="alertarAuricularesSiEsVideo('${tarea.enlace_externo}')" style="color:var(--info); font-weight:bold;">Hacé clic acá para abrir enlace</a></p>` : ''}
-            ${tarea.archivo_url ? `<p>📁 Archivo adjunto por la Prof: <a href="${tarea.archivo_url}" target="_blank" style="color:var(--primary);">Descargar material adjunto</a></p>` : ''}
-            ${tarea.devolucion ? `<div style="background:#fef2f2; border-left:4px solid var(--danger); padding:8px; margin-top:10px; font-size:13px; color:#991b1b;">📢 <strong>Corrección de la profesora:</strong> ${tarea.devolucion}</div>` : ''}
+            ${tarea.enlace_externo ? `<p>🔗 Enlace complementario: <a href="${tarea.enlace_externo}" target="_blank" onclick="alertarAuricularesSiEsVideo('${tarea.enlace_externo}')" style="color:var(--info); font-weight:bold;">Abrir enlace externo</a></p>` : ''}
+            ${tarea.archivo_url ? `<p>📁 Documento de la profesora: <a href="${tarea.archivo_url}" target="_blank" style="color:var(--primary);">Descargar PDF / Imagen</a></p>` : ''}
+            ${tarea.devolucion ? `<div style="background:#fef2f2; border-left:4px solid var(--danger); padding:8px; margin-top:10px; font-size:13px; color:#991b1b;">📢 <strong>Nota de Corrección:</strong> ${tarea.devolucion}</div>` : ''}
             
             ${bloqueEntregaHtml}
         `;
@@ -655,7 +630,7 @@ function renderizarPanelEstudiante(data) {
     });
 
     if(contenedorUrgentes.innerHTML === '') {
-        contenedorUrgentes.innerHTML = `<p class="text-muted">🎉 ¡Excelente! No tenés actividades pendientes en este momento.</p>`;
+        contenedorUrgentes.innerHTML = `<p class="text-muted">🎉 ¡Felicidades! Completaste todas las tareas de las unidades desbloqueadas.</p>`;
     }
 }
 
@@ -670,30 +645,29 @@ async function entregarArchivoTareaEstudiante(e, asignacionId) {
     const formData = new FormData(e.target);
     const btn = e.target.querySelector('button');
     btn.disabled = true;
-    btn.textContent = "Subiendo solución...";
+    btn.textContent = "Cargando archivo...";
 
     const res = await fetch(`/api/asignaciones/${asignacionId}/entregar`, {
         method: 'POST',
         body: formData
     });
     if(res.ok) {
-        alert("¡Tu entrega fue enviada correctamente a la profesora!");
+        alert("¡Trabajo enviado con éxito!");
         cargarDashboardEstudiante();
     } else {
-        alert("Falló la carga del archivo.");
+        alert("Ocurrió un error.");
         btn.disabled = false;
-        btn.textContent = "Subir y Entregar Trabajo";
     }
 }
 
 async function marcarTareaComoVistaEstudiante(asignacionId, enlaceExterno) {
     if(enlaceExterno) alertarAuricularesSiEsVideo(enlaceExterno);
-    const res = await fetch(`/api/asignaciones/${asignacionId}/visto`, { method: 'POST' });
-    if(res.ok) cargarDashboardEstudiante();
+    await fetch(`/api/asignaciones/${asignacionId}/visto`, { method: 'POST' });
+    cargarDashboardEstudiante();
 }
 
 // =========================================================================
-// CHAT CON INTELIGENCIA ARTIFICIAL (TUTOR MATEMÁTICO GEMINI DE 24 HORAS)
+// 🤖 INTERACCIÓN CON CHAT BOT (GEMINI IA)
 // =========================================================================
 async function enviarMensajeGemini() {
     const input = document.getElementById('gemini-input-text');
@@ -716,7 +690,7 @@ async function enviarMensajeGemini() {
 }
 
 // =========================================================================
-// CRONOGRAMA DE FECHAS IMPORTANTES Y RESPALDOS GENERALES
+// 📅 FECHAS IMPORTANTES Y RESPALDOS
 // =========================================================================
 async function cargarFechasImportantes() {
     const res = await fetch('/api/fechas');
@@ -754,14 +728,11 @@ async function eliminarFechaImportante(id) {
     cargarFechasImportantes();
 }
 
-// COPIAS DE SEGURIDAD (MIGRACIÓN DESDE INTERFAZ)
 async function subirCopiaSeguridad(input) {
     const archivo = input.files[0];
     if (!archivo) return;
-    if (!confirm("⚠️ ¿Restaurar este respaldo? Se borrarán todos los datos actuales.")) {
-        input.value = ''; 
-        return;
-    }
+    if (!confirm("⚠️ ¿Restaurar este respaldo?")) return;
+    
     const lector = new FileReader();
     lector.onload = async (e) => {
         try {
@@ -771,14 +742,13 @@ async function subirCopiaSeguridad(input) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datosJSON)
             });
-            const data = await res.json();
-            if (data.success) { alert("🎉 Sistema restaurado."); location.reload(); }
-        } catch (err) { alert("Archivo JSON no válido."); }
+            if (res.ok) { alert("🎉 Sistema restaurado."); location.reload(); }
+        } catch (err) { alert("Archivo inválido."); }
     };
     lector.readAsText(archivo);
 }
 
-// DISPARADOR INICIAL AL ENTRAR A LA WEB
+// --- ARRANQUE AUTOMÁTICO AL INICIAR LA PLATAFORMA ---
 precargarUsuariosParaLogin();
 if(document.getElementById('lista-fechas-render')) {
     cargarFechasImportantes();
