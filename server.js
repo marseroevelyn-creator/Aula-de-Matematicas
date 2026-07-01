@@ -10,7 +10,7 @@ const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const session = require('express-session');
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai'); // <-- Cambiado
 const path = require('path');
 
 const app = express();
@@ -47,19 +47,17 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
-// Inicialización de Inteligencia Artificial Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Inicialización de Inteligencia Artificial Gemini con la librería clásica
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY); // <-- Cambiado
 
 // --- INICIALIZACIÓN COMPLETA DEL ESQUEMA DE BASE DE DATOS (NEON) ---
 async function initDB() {
-    // Cursos
     await pool.query(`CREATE TABLE IF NOT EXISTS cursos (
         id SERIAL PRIMARY KEY,
         nombre TEXT NOT NULL,
         whatsapp_link TEXT
     );`);
 
-    // Usuarios (Profesora y Alumnos)
     await pool.query(`CREATE TABLE IF NOT EXISTS usuarios (
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
@@ -69,7 +67,6 @@ async function initDB() {
         debe_cambiar_clave BOOLEAN DEFAULT TRUE
     );`);
 
-    // Recordatorios / Fechas Importantes
     await pool.query(`CREATE TABLE IF NOT EXISTS fechas_importantes (
         id SERIAL PRIMARY KEY,
         curso_id INT REFERENCES cursos(id) ON DELETE CASCADE,
@@ -77,7 +74,6 @@ async function initDB() {
         fecha DATE NOT NULL
     );`);
 
-    // Banco de Tareas (Agrupadas por carpetas/temas)
     await pool.query(`CREATE TABLE IF NOT EXISTS tareas (
         id SERIAL PRIMARY KEY,
         titulo TEXT NOT NULL,
@@ -90,7 +86,6 @@ async function initDB() {
         prerrequisito_id INT REFERENCES tareas(id) ON DELETE SET NULL
     );`);
 
-    // Relación de Asignación y Control Individualizado de Tareas
     await pool.query(`CREATE TABLE IF NOT EXISTS asignaciones (
         id SERIAL PRIMARY KEY,
         alumno_id INT REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -246,7 +241,7 @@ app.delete('/api/alumnos/:id', async (req, res) => {
 });
 
 
-// --- BLOQUE: BANCO DE TAREAS Y ASIGNACIÓN MASIVA/INDIVIDUAL ---
+// --- BLOQUE: BANCO DE TAREAS ---
 app.get('/api/tareas', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM tareas ORDER BY id DESC');
@@ -266,7 +261,6 @@ app.post('/api/tareas', upload.single('archivo'), async (req, res) => {
 
         const tId = nuevaTarea.rows[0].id;
 
-        // Automatización de Asignación masiva o selectiva instantánea
         if (asignar_a === 'todo_el_curso' && curso_id) {
             const alumnos = await pool.query('SELECT id FROM usuarios WHERE curso_id = $1 AND rol = \'alumno\'', [curso_id]);
             for (let alumno of alumnos.rows) {
@@ -277,7 +271,6 @@ app.post('/api/tareas', upload.single('archivo'), async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Configurar asignaciones particulares (Exclusiones)
 app.post('/api/asignaciones/configurar', async (req, res) => {
     const { alumno_id, tarea_id, excluido } = req.body;
     try {
@@ -291,7 +284,7 @@ app.post('/api/asignaciones/configurar', async (req, res) => {
 });
 
 
-// --- BLOQUE: ENTREGAS, CALIFICACIONES Y REINICIOS ---
+// --- BLOQUE: ENTREGAS ---
 app.get('/api/entregas/tarea/:tarea_id', async (req, res) => {
     try {
         const result = await pool.query(
@@ -331,7 +324,7 @@ app.post('/api/devolucion/:id', async (req, res) => {
 });
 
 
-// --- BLOQUE: ESPACIO ALUMNO (FLUJO AUTOMATIZADO E ÍNDICES) ---
+// --- BLOQUE: ESPACIO ALUMNO ---
 app.get('/api/alumno/dashboard', async (req, res) => {
     if (!req.session.user) return res.status(403).send('No autorizado');
     const alId = req.session.user.id;
@@ -341,7 +334,6 @@ app.get('/api/alumno/dashboard', async (req, res) => {
         const cursoInfo = await pool.query('SELECT * FROM cursos WHERE id = $1', [cId]);
         const fechas = await pool.query('SELECT * FROM fechas_importantes WHERE curso_id = $1 ORDER BY fecha ASC', [cId]);
         
-        // Obtener todas las tareas y cruzar con sus estados de asignación/prerrequisitos
         const tareasRaw = await pool.query(`
             SELECT t.*, a.entregado, a.completada, a.devolucion, a.excluido, a.visto
             FROM tareas t
@@ -350,7 +342,6 @@ app.get('/api/alumno/dashboard', async (req, res) => {
             ORDER BY t.id ASC
         `, [alId]);
 
-        // Lógica de automatización por dependencias (prerrequisitos)
         let tareasDisponibles = [];
         const completadasIds = new Set(tareasRaw.rows.filter(r => r.completada).map(r => r.id));
 
@@ -382,23 +373,22 @@ app.post('/api/alumno/video-visto/:tarea_id', async (req, res) => {
 });
 
 
-// --- BLOQUE: INTEGRACIÓN CON IA DE GEMINI ---
+// --- BLOQUE: INTEGRACIÓN CON IA DE GEMINI (AJUSTADO) ---
 app.post('/api/gemini', async (req, res) => {
     const { prompt } = req.body;
     if (!prompt) return res.status(400).send('Prompt vacío');
     try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: `Eres un tutor experto en pedagogía de las matemáticas de nivel secundario/primario. Tu objetivo es guiar al estudiante paso a paso sin darle la solución directamente de entrada, usa un lenguaje motivante y claro. Pregunta del alumno: ${prompt}`
-        });
-        res.json({ respuesta: response.text });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // <-- Ajustado al modelo estable
+        const result = await model.generateContent(`Eres un tutor experto en pedagogía de las matemáticas de nivel secundario/primario. Tu objetivo es guiar al estudiante paso a paso sin darle la solución directamente de entrada, usa un lenguaje motivante y claro. Pregunta del alumno: ${prompt}`);
+        const response = await result.response;
+        res.json({ respuesta: response.text() });
     } catch (err) {
         res.status(500).json({ error: 'Fallo al conectar con el servidor de IA de Google.' });
     }
 });
 
 
-// --- BLOQUE: COPIA DE SEGURIDAD (BACKUP DE DATOS EN CALIENTE) ---
+// --- BLOQUE: COPIA DE SEGURIDAD ---
 app.get('/api/sistema/respaldo', async (req, res) => {
     try {
         const cursos = await pool.query('SELECT * FROM cursos');
