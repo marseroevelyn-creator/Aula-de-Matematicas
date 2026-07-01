@@ -43,28 +43,39 @@
         </header>
 
         <div class="main-grid">
-            <!-- Columna Izquierda: Cursos y Alumnos -->
             <aside class="sidebar-prof">
+                
                 <div class="card">
-                    <h3>Mis Cursos</h3>
-                    <form id="form-crear-curso">
-                        <input type="text" id="curso-nombre" placeholder="Nombre (Ej: 4to Año A)" required>
-                        <input type="url" id="curso-wa" placeholder="Link de WhatsApp">
-                        <button type="submit" class="btn-success">Crear Curso</button>
-                    </form>
+                    <h3>🏫 Gestión de Cursos</h3>
+                    <label for="filtro-curso-profesora">Seleccionar Curso Activo:</label>
+                    <select id="filtro-curso-profesora" onchange="cambiarCursoActivoProfesor(this.value)">
+                        <option value="">-- Seleccione un curso --</option>
+                    </select>
                     <hr>
-                    <div id="container-cursos-lista"></div>
+                    <label>Crear Nuevo Curso:</label>
+                    <input type="text" id="nuevo-curso-nombre" placeholder="Ej: 4to Año A">
+                    <input type="text" id="nuevo-curso-whatsapp" placeholder="Enlace de WhatsApp (Opcional)">
+                    <button onclick="crearCurso()" class="btn-success">➕ Crear Curso</button>
+                    
+                    <div id="lista-cursos-render" class="lista-items-admin" style="margin-top: 15px;"></div>
                 </div>
 
-                <div id="card-alumnos-gestion" class="card hidden">
-                    <h3>Alumnos en: <span id="nombre-curso-seleccionado"></span></h3>
-                    <form id="form-crear-alumno">
-                        <input type="text" id="alumno-username" placeholder="Nombre completo del alumno" required>
-                        <button type="submit" class="btn-success">Registrar Alumno</button>
-                    </form>
-                    <ul id="lista-alumnos-container"></ul>
+                <div class="card">
+                    <h3>👥 Alumnos en este Curso</h3>
+                    <div id="vista-alumnos-curso" class="lista-items-admin">
+                        <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Selecciona un curso arriba para ver sus alumnos.</p>
+                    </div>
+                    <hr>
+                    <label>Registrar Alumno en Curso Activo:</label>
+                    <input type="text" id="nuevo-alumno-username" placeholder="Nombre de usuario (Ej: juan.perez)">
+                    <input type="password" id="nuevo-alumno-password" value="matematica123" placeholder="Contraseña provisoria">
+                    <button onclick="crearAlumno()" class="btn-primary" style="width: 100%;">👤 Registrar Alumno</button>
                 </div>
+
             </aside>
+
+            <main class="content-prof">
+               
 
             <!-- Área Central: Banco de Tareas y Revisión de Entregas -->
             <main class="content-prof">
