@@ -269,6 +269,7 @@ async function crearCurso() {
 }
 
 // --- ALTA DE ESTUDIANTES DIRECTA (PROTEGIDA ANTE COMPONENTES NULOS) ---
+// --- ALTA DE ESTUDIANTES DIRECTA (CORRECCIÓN DE ID) ---
 const formCrearAlumno = document.getElementById('form-crear-alumno');
 if (formCrearAlumno) {
     formCrearAlumno.addEventListener('submit', async (e) => {
@@ -277,7 +278,8 @@ if (formCrearAlumno) {
         if (!input) return;
         const username = input.value.trim().toLowerCase();
 
-        if (!cursoSeleccionadoProfesorId) {
+        // Validación estricta en el cliente para evitar enviar valores vacíos o corruptos
+        if (!cursoSeleccionadoProfesorId || isNaN(parseInt(cursoSeleccionadoProfesorId))) {
             alert("⚠️ Por favor, selecciona primero un curso activo en el panel superior.");
             return;
         }
@@ -294,13 +296,14 @@ if (formCrearAlumno) {
                 })
             });
             const data = await res.json();
-            if (data.success || data.id) {
+            
+            if (res.ok && (data.success || data.id)) {
                 alert(`👤 Alumno "${username}" registrado con éxito.\nSu clave automática inicial es "usuario".`);
                 input.value = '';
                 cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
                 precargarUsuariosParaLogin();
             } else {
-                alert("Error: " + (data.error || "El nombre de usuario ya está registrado."));
+                alert("Error del servidor: " + (data.error || "El nombre de usuario ya existe o los datos son inválidos."));
             }
         } catch (err) {
             alert("Error de conexión al registrar al estudiante.");
