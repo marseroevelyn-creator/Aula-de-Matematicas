@@ -187,3 +187,32 @@ hr { border: 0; border-top: 1px solid var(--border-color); margin: 16px 0; }
     background: #cbd5e1;
     border-radius: 4px;
 }
+/* CAJA FLOTANTE DE SUGERENCIAS EN LOGIN */
+.lista-sugerencias-login {
+    position: absolute;
+    top: calc(100% - 10px); /* Justo debajo del input */
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    max-height: 160px;
+    overflow-y: auto;
+    z-index: 999;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.sugerencia-item {
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    text-align: left;
+}
+
+.sugerencia-item:hover {
+    background-color: #f1f5f9; /* Color gris suave al pasar el mouse */
+    color: var(--primary);
+}
