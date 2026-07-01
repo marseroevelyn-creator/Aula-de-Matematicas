@@ -257,6 +257,9 @@ async function eliminarCurso(id) {
 // =========================================================================
 // --- GESTIÓN DE ALUMNOS (ALTA AUTOMÁTICA Y REINICIO) ---
 // =========================================================================
+// =========================================================================
+// --- GESTIÓN DE ALUMNOS (ALTA AUTOMÁTICA Y REINICIO) ---
+// =========================================================================
 
 // Escucha el submit del formulario de registro de alumnos
 document.getElementById('form-crear-alumno').addEventListener('submit', async (e) => {
@@ -276,7 +279,7 @@ document.getElementById('form-crear-alumno').addEventListener('submit', async (e
     }
 
     try {
-        // Enviamos la clave por defecto "usuario" de forma transparente e interna
+        // Se envía la clave por defecto "usuario" de forma automática y transparente
         const res = await fetch('/api/usuarios', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -290,33 +293,80 @@ document.getElementById('form-crear-alumno').addEventListener('submit', async (e
         const data = await res.json();
 
         if (data.id || data.success) {
-            alert(`👤 Alumno "${username}" registrado con éxito. Su clave automática es "usuario".`);
+            alert(`👤 Alumno "${username}" registrado con éxito.\nSu clave automática inicial es "usuario".`);
             userInput.value = '';
             
-            // Refrescar vistas en tiempo real
+            // Refrescar la lista de alumnos del curso actual y el buscador predictivo
             cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
             precargarUsuariosParaLogin(); 
         } else {
-            alert("Error al registrar alumno: " + (data.error || "El usuario ya existe."));
+            alert("Error al registrar alumno: " + (data.error || "El nombre de usuario ya se encuentra en uso."));
         }
     } catch (err) {
-        console.error(err);
+        console.error("Error en registrar alumno:", err);
         alert("Hubo un error de red al intentar registrar al alumno.");
     }
 });
 
+// Función modificada para pintar las tarjetas de alumnos de forma correcta usando 'alumno.id'
+async function cambiarCursoActivoProfesor(cursoId) {
+    cursoSeleccionadoProfesorId = cursoId;
+    cursoActualId = cursoId; 
+    
+    const contenedorAlumnos = document.getElementById('vista-alumnos-curso');
+    if (!contenedorAlumnos) return;
+    
+    if (!cursoId) {
+        contenedorAlumnos.innerHTML = '<p style="color: var(--text-muted); text-align: center; width: 100%;">Por favor, seleccione un curso en el desplegable superior para auditar a sus estudiantes.</p>';
+        return;
+    }
+
+    contenedorAlumnos.innerHTML = '<p style="text-align:center; font-size:13px; width: 100%;">Cargando alumnos del curso activo...</p>';
+
+    try {
+        const res = await fetch('/api/usuarios'); 
+        const usuarios = await res.json();
+
+        // Filtramos alumnos por el ID de curso correcto
+        const alumnosDelCurso = usuarios.filter(u => u.rol === 'alumno' && String(u.curso_id) === String(cursoId));
+
+        if (alumnosDelCurso.length === 0) {
+            contenedorAlumnos.innerHTML = '<p style="color: var(--text-muted); text-align: center; width: 100%;">No hay alumnos registrados en este curso todavía.</p>';
+            return;
+        }
+
+        // IMPORTANTE: Aquí pasamos 'alumno.id' de forma explícita al botón de reiniciar clave
+        contenedorAlumnos.innerHTML = alumnosDelCurso.map(alumno => `
+            <div class="item-lista-accion">
+                <div>
+                    <strong style="display:block; font-size:14px; color: var(--text-main);">${alumno.username}</strong>
+                    <span style="font-size:11px; color:var(--text-muted);">${alumno.debe_cambiar_clave ? '⚠️ Debe cambiar clave' : '✅ Clave establecida'}</span>
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <button onclick="reiniciarClaveAlumno('${alumno.id}')" class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Reiniciar clave a 'usuario'">🔄 Clave</button>
+                    <button onclick="eliminarAlumno('${alumno.id}')" class="btn-danger" style="padding: 4px 8px; font-size: 11px;" title="Eliminar alumno">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error("Error al cargar alumnos por curso:", error);
+        contenedorAlumnos.innerHTML = '<p style="color: var(--danger); font-size: 13px;">Error de red al procesar los alumnos.</p>';
+    }
+}
+
 async function reiniciarClaveAlumno(id) {
     if (!id || id === 'undefined') {
-        alert("Error: ID de alumno inválido.");
+        alert("⚠️ Error: El ID del alumno no es válido.");
         return;
     }
     if(confirm("¿Deseas restablecer la contraseña de este estudiante a la clave inicial 'usuario'?")) {
         try {
-            // Conexión directa a la ruta correcta del backend
+            // Conexión a la ruta de usuarios del sistema central
             const res = await fetch(`/api/usuarios/${id}/reiniciar`, { method: 'POST' });
             const data = await res.json();
             if (data.success) {
-                alert("🔑 Clave restablecida a 'usuario' con éxito.");
+                alert("🔑 Clave restablecida a 'usuario' con éxito. Se le solicitará cambiarla en su próximo ingreso.");
                 cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
             } else {
                 alert("No se pudo procesar el reinicio: " + data.error);
@@ -325,15 +375,6 @@ async function reiniciarClaveAlumno(id) {
             console.error("Error al reiniciar clave:", err);
             alert("Error de conexión al intentar restablecer la contraseña.");
         }
-    }
-}
-
-async function eliminarAlumno(id) {
-    if(confirm("¿Eliminar definitivamente a este estudiante?")) {
-        await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
-        alert("Estudiante dado de baja.");
-        cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
-        precargarUsuariosParaLogin();
     }
 }
 
