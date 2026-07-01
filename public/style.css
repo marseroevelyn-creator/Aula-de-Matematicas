@@ -163,3 +163,27 @@ hr { border: 0; border-top: 1px solid var(--border-color); margin: 16px 0; }
     .layout-alumno-body { flex-direction: column; } 
     .navbar { flex-direction: column; gap: 12px; text-align: center; }
 }
+/* Corrección para que el contenedor de entregas no colapse feo si está vacío */
+#tabla-entregas-render { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+    gap: 16px; 
+    min-height: 100px; /* Le da una altura mínima para preservar el espacio */
+}
+
+/* Contenedor interno desplazable para las listas de alumnos/cursos si crecen mucho */
+.lista-items-admin {
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-top: 10px;
+}
+
+/* Estilo para la barra de desplazamiento interna */
+.lista-items-admin::-webkit-scrollbar {
+    width: 5px;
+}
+.lista-items-admin::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
