@@ -279,7 +279,7 @@ document.getElementById('form-crear-alumno').addEventListener('submit', async (e
     }
 
     try {
-        // Se envía la clave por defecto "usuario" de forma automática y transparente
+        // Enviamos la clave por defecto "usuario" automáticamente de forma interna
         const res = await fetch('/api/usuarios', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -296,18 +296,17 @@ document.getElementById('form-crear-alumno').addEventListener('submit', async (e
             alert(`👤 Alumno "${username}" registrado con éxito.\nSu clave automática inicial es "usuario".`);
             userInput.value = '';
             
-            // Refrescar la lista de alumnos del curso actual y el buscador predictivo
+            // Refrescar vistas en tiempo real
             cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
-            precargarUsuariosParaLogin(); 
+            if (typeof precargarUsuariosParaLogin === 'function') precargarUsuariosParaLogin(); 
         } else {
-            alert("Error al registrar alumno: " + (data.error || "El nombre de usuario ya se encuentra en uso."));
+            alert("Error al registrar alumno: " + (data.error || "El usuario ya existe."));
         }
     } catch (err) {
-        console.error("Error en registrar alumno:", err);
+        console.error(err);
         alert("Hubo un error de red al intentar registrar al alumno.");
     }
 });
-
 // Función modificada para pintar las tarjetas de alumnos de forma correcta usando 'alumno.id'
 async function cambiarCursoActivoProfesor(cursoId) {
     cursoSeleccionadoProfesorId = cursoId;
