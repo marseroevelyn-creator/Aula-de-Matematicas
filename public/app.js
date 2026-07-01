@@ -435,3 +435,37 @@ async function descargarCopiaSeguridad() {
 function logout() {
     fetch('/api/auth/logout').then(() => location.reload());
 }
+// --- NUEVA FUNCIÓN: IMPORTAR RESPALDO ---
+async function subirCopiaSeguridad(input) {
+    const archivo = input.files[0];
+    if (!archivo) return;
+
+    if (!confirm("⚠️ ¿Estás seguro de que deseas restaurar este respaldo? Se borrarán TODOS los datos actuales del sistema de forma permanente.")) {
+        input.value = ''; // Limpiar input
+        return;
+    }
+
+    const lector = new FileReader();
+    lector.onload = async (e) => {
+        try {
+            const datosJSON = JSON.parse(e.target.result);
+            
+            const res = await fetch('/api/sistema/restaurar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosJSON)
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                alert("🎉 " + data.message);
+                location.reload(); // Recargar para ver los nuevos datos impactados
+            } else {
+                alert("Error al restaurar: " + data.error);
+            }
+        } catch (err) {
+            alert("Error: El archivo seleccionado no es un JSON válido de respaldo.");
+        }
+    };
+    lector.readAsText(archivo);
+}
