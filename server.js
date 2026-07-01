@@ -106,8 +106,65 @@ initDB().catch(console.error);
 
 
 // --- BLOQUE: AUTENTICACIÓN Y SEGURIDAD ---
-app.post('/api/auth/login', async (req, res) => {
-    const { username, password } = req.body;
+// --- NUEVA FUNCIÓN DE RESTAURACIÓN COMPATIBLE CON TU ARCHIVO VIEJO ---
+app.post('/api/sistema/restaurar', express.json({limit: '100mb'}), async (req, res) => {
+    // Acepta tanto el formato nuevo como el formato antiguo que subiste
+    const cursosInput = req.body.cursos || [];
+    const alumnosInput = req.body.usuarios || req.body.alumnos || [];
+    const recursosInput = req.body.tareas || req.body.recursos || [];
+    
+    try {
+        // Limpiamos la base de datos para la nueva carga limpia
+        await pool.query('TRUNCATE asignaciones, tareas, usuarios, fechas_importantes, cursos RESTART IDENTITY CASCADE');
+        
+        // 1. Insertar los Cursos
+        for (let c of cursosInput) {
+            // Si el archivo viejo no tiene link_whatsapp, le ponemos uno vacío por defecto
+            const whatsapp = c.whatsapp_link !== undefined ? c.whatsapp_link : (c.link_whatsapp || "");
+            await pool.query('INSERT INTO cursos (nombre, whatsapp_link) VALUES ($1, $2)', [c.nombre, whatsapp]);
+        }
+
+        // Recuperamos los IDs reales que Neon les asignó a los cursos recién creados
+        const cursosDb = await pool.query('SELECT id, nombre FROM cursos');
+        const mapaCursos = {};
+        cursosDb.rows.forEach(row => { mapaCursos[row.nombre.toUpperCase().trim()] = row.id; });
+
+        // 2. Insertar los Alumnos (Usuarios)
+        for (let u of alumnosInput) {
+            const nombreUsuario = u.username || u.nombre;
+            const passwordUsuario = u.password || u.contrasena || "usuario";
+            const cursoNombre = u.curso ? u.curso.toUpperCase().trim() : null;
+            const cursoId = mapaCursos[cursoNombre] || null;
+            
+            // primer_ingreso del archivo viejo se traduce a si debe cambiar clave
+            const debeCambiar = u.debe_cambiar_clave !== undefined ? u.debe_cambiar_clave : (u.primer_ingreso == 1);
+
+            await pool.query(
+                'INSERT INTO usuarios (username, password, rol, curso_id, debe_cambiar_clave) VALUES ($1, $2, \'alumno\', $3, $4)', 
+                [nombreUsuario, passwordUsuario, cursoId, debeCambiar]
+            );
+        }
+
+        // 3. Insertar las Tareas (Recursos)
+        for (let r of recursosInput) {
+            const titulo = r.titulo || "Tarea sin título";
+            const descripcion = r.descripcion || "";
+            const carpeta = r.tema || "General";
+            const archivoUrl = r.archivo_url || r.archivo_tarea_url || null;
+            const requiereEntrega = r.requiere_entrega == 1 || r.requiere_entrega === true;
+
+            await pool.query(
+                'INSERT INTO tareas (titulo, descripcion, carpeta, archivo_url, requiere_entrega) VALUES ($1, $2, $3, $4, $5)',
+                [titulo, descripcion, carpeta, archivoUrl, requiereEntrega]
+            );
+        }
+
+        res.json({ success: true, message: "¡Datos migrados y restaurados con éxito total!" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error en la base de datos: " + err.message });
+    }
+});
     try {
         if (username === 'profesora' && password === (process.env.ADMIN_PASSWORD || 'admin123')) {
             req.session.user = { id: 0, username: 'profesora', rol: 'profesora' };
