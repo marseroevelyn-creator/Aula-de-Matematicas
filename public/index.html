@@ -3,215 +3,365 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeltaMath - Aula Digital Incorporada</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Aula Virtual de Matemática</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 font-sans">
 
-    <div id="section-login" class="container-auth">
-        <div class="card login-box">
-            <h2>Aula Virtual</h2>
-            <form id="login-form" autocomplete="off">
-                <div class="form-group">
-                    <label>Tu Nombre Completo:</label>
-                    <div style="position: relative;">
-                        <input type="text" id="login-username" placeholder="Escribe tu nombre..." required oninput="filtrarUsuariosLogin(this.value)">
-                        <div id="login-sugerencias" class="hidden lista-sugerencias-login"></div>
+    <div id="view-login" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 text-center">
+            <div class="flex justify-center mb-4 text-blue-600">
+                <i data-lucide="calculator" class="w-16 h-16"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-6">Aula Virtual</h1>
+            
+            <form id="form-login" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Tu Nombre Completo:</label>
+                    <input type="text" id="login-nombre" placeholder="Escribí tu nombre..." class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Tu Contraseña:</label>
+                    <div class="relative">
+                        <input type="password" id="login-clave" placeholder="Contraseña" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                        <button type="button" onclick="togglePassword('login-clave')" class="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600">
+                            <i data-lucide="eye" class="w-5 h-5"></i>
+                        </button>
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <label>Contraseña</label>
-                    <div class="password-container">
-                        <input type="password" id="login-password" value="usuario" required>
-                        <button type="button" id="btn-toggle-pwd" class="btn-eye">👁️</button>
-                    </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition duration-200">Ingresar al Aula</button>
+            </form>
+            <button onclick="switchView('view-login-docente')" class="mt-6 text-sm text-gray-500 hover:text-blue-600 inline-flex items-center gap-2 font-medium">
+                <i data-lucide="shield-alert" class="w-4 h-4"></i> Acceso Panel Docente
+            </button>
+        </div>
+    </div>
+
+    <div id="view-login-docente" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 text-center">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Panel Docente</h2>
+            <form id="form-login-docente" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Contraseña Docente</label>
+                    <input type="password" id="docente-clave" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" required>
                 </div>
-                
-                <button type="submit" class="btn-primary-block">Ingresar al Aula</button>
-                <button type="button" id="btn-ir-admin" class="btn-link">Acceso Panel Docente</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg">Ingresar</button>
             </form>
         </div>
     </div>
 
-    <div id="modal-primer-ingreso" class="modal-overlay hidden">
-        <div class="modal-card">
-            <h3>Primer Ingreso</h3>
-            <p>Por seguridad debés cambiar tu contraseña genérica.</p>
-            <div class="form-group">
-                <label>Nueva contraseña (mínimo 4 dígitos):</label>
-                <input type="password" id="nueva-clave-alumno" placeholder="Ej: 1234">
-            </div>
-            <button id="btn-guardar-primera-clave" class="btn-success">Guardar y Entrar</button>
+    <div id="view-primer-ingreso" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border border-amber-100 text-center">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Primer Ingreso</h2>
+            <p class="text-sm text-gray-600 mb-6">Por seguridad debés cambiar tu contraseña genérica.</p>
+            <form id="form-primer-ingreso" class="space-y-4">
+                <input type="password" id="nueva-clave" placeholder="Nueva contraseña (mínimo 4 dígitos)" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none text-center" minlength="4" required>
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-lg">Guardar y Entrar</button>
+            </form>
         </div>
     </div>
 
-    <div id="section-profesora" class="container-dashboard hidden">
-        <header class="dashboard-header">
-            <h1>DeltaMath - Panel Docente</h1>
-            <button onclick="logout()" class="btn-danger-sm">Cerrar Sesión</button>
+    <div id="view-docente" class="hidden min-h-screen p-4 md:p-8">
+        <header class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2"><i data-lucide="layout-dashboard" class="text-blue-600"></i> Panel de Control Docente</h1>
+                <p class="text-sm text-gray-500">Aula virtual de Matemática | Gestión de grupos y contenidos</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="exportarBackup()" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium inline-flex items-center gap-1"><i data-lucide="download" class="w-4 h-4"></i> Exportar Copia JSON</button>
+                <button onclick="logout()" class="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium inline-flex items-center gap-1"><i data-lucide="log-out" class="w-4 h-4"></i> Salir</button>
+            </div>
         </header>
 
-        <div class="card select-curso-bar">
-            <label><strong>Seleccionar Curso Activo:</strong></label>
-            <select id="filtro-curso-profesora" onchange="cambiarCursoActivoProfesor(this.value)">
-                <option value="">-- Seleccione un curso --</option>
-            </select>
-            <div class="header-actions">
-                <button onclick="mostrarModalCurso()" class="btn-primary">+ Crear Curso</button>
-            </div>
-        </div>
+        <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2"><i data-lucide="graduation-cap" class="text-blue-600"></i> Mis Cursos Activos</h2>
+                    <div id="lista-cursos" class="flex flex-wrap gap-2">
+                        </div>
+                </section>
 
-        <div class="layout-profesora">
-            <aside class="col-izquierda">
-                <div class="card">
-                    <h3>👥 Alumnos del Curso</h3>
-                    <form id="form-crear-alumno" class="form-mini" autocomplete="off">
-                        <input type="text" id="nuevo-alumno-username" placeholder="Nombre del alumno..." required>
-                        <button type="submit" class="btn-success-sm">+</button>
-                    </form>
-                    <div class="tabla-contenedor">
-                        <table class="tabla-datos">
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2"><i data-lucide="users" class="text-blue-600"></i> Alumnos inscritos</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
                             <thead>
-                                <tr>
-                                    <th>Alumno</th>
-                                    <th>Progreso</th>
-                                    <th>Acción</th>
+                                <tr class="border-b border-gray-100 text-gray-400 font-medium">
+                                    <th class="pb-3">Nombre Alumno</th>
+                                    <th class="pb-3">Progreso</th>
+                                    <th class="pb-3 text-right">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody id="vista-alumnos-curso">
+                            <tbody id="tabla-alumnos">
                                 </tbody>
                         </table>
                     </div>
-                </div>
+                </section>
+            </div>
 
-                <div class="card">
-                    <h3>📅 Fechas Importantes</h3>
-                    <form id="form-nueva-fecha" class="form-mini">
-                        <input type="date" id="f-fecha" required>
-                        <input type="text" id="f-evento" placeholder="Evento/Examen..." required>
-                        <button type="submit" class="btn-primary-sm">+</button>
-                    </form>
-                    <ul id="lista-fechas-admin" class="lista-items-scroll"></ul>
+            <div class="space-y-8">
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold flex items-center gap-2"><i data-lucide="folder-heart" class="text-blue-600"></i> Banco Global de Recursos</h2>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">+ Crear Tarea</button>
+                    </div>
+                    <div id="banco-tareas" class="space-y-3">
+                        </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="view-alumno" class="hidden min-h-screen flex flex-col">
+        <header class="bg-blue-600 text-white p-6 shadow-md">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold" id="alumno-header-titulo">Mi Aula Virtual</h1>
+                    <p class="text-sm opacity-90" id="alumno-header-subtitulo">Estudiante: Carga... | Curso: Carga...</p>
                 </div>
+                <button onclick="logout()" class="bg-white text-blue-600 font-bold px-4 py-2 rounded-xl text-sm shadow hover:bg-blue-50 transition">Salir</button>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto w-full flex-1 grid grid-cols-1 md:grid-cols-4 gap-6 p-4 md:p-8">
+            <aside class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 h-fit space-y-2">
+                <h3 class="font-bold text-gray-400 text-xs tracking-wider uppercase mb-3 px-2">Temas de la Materia</h3>
+                <nav id="alumno-indice-temas" class="space-y-1">
+                    </nav>
             </aside>
 
-            <main class="col-derecha">
-                <div class="card">
-                    <h3>📌 Tareas Asignadas al Curso</h3>
-                    <div class="tabla-contenedor">
-                        <table class="tabla-datos">
-                            <thead>
-                                <tr>
-                                    <th>Tema</th>
-                                    <th>Actividad</th>
-                                    <th>Pre-requisito</th>
-                                    <th>Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-tareas-asignadas">
-                                </tbody>
-                        </table>
+            <main class="md:col-span-3 space-y-6">
+                <section class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-6 rounded-2xl shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="text-base font-bold text-blue-900 flex items-center gap-2"><i data-lucide="sparkles" class="text-blue-500"></i> Consultar a Gemini AI</h2>
+                        <span class="bg-blue-200 text-blue-800 text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full">Tutor de Matemática</span>
                     </div>
-                </div>
+                    <p class="text-xs text-blue-700 mb-4">¿Tenés dudas con una ecuación, teoría o querés verificar tu procedimiento? Preguntale a la IA:</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="input-gemini" placeholder="Escribí tu duda matemática acá..." class="flex-1 px-4 py-3 rounded-xl border border-blue-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+                        <button onclick="consultarGemini()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-xl shadow-md flex items-center justify-center transition"><i data-lucide="send" class="w-5 h-5"></i></button>
+                    </div>
+                    <div id="respuesta-gemini" class="mt-4 p-4 bg-white rounded-xl border border-blue-100 text-sm hidden max-h-48 overflow-y-auto whitespace-pre-line text-gray-700"></div>
+                </section>
 
-                <div class="card">
-                    <div class="banco-header">
-                        <h3>📚 Banco Global de Recursos</h3>
-                        <button onclick="mostrarModalTarea()" class="btn-primary">+ Crear Tarea</button>
-                    </div>
-                    <div class="buscador-row">
-                        <input type="text" id="input-buscar-tarea" placeholder="Buscar tarea por título o unidad..." oninput="renderizarBancoTareas()">
-                    </div>
-                    <div id="banco-tareas-render" class="banco-grid">
+                <section class="space-y-4">
+                    <h2 class="text-lg font-bold flex items-center gap-2 text-gray-900"><i data-lucide="list-todo" class="text-blue-600"></i> Tus Actividades Asignadas</h2>
+                    <div id="contenedor-actividades-alumno" class="space-y-4">
                         </div>
-                </div>
-
-                <div class="card">
-                    <h3>📥 Corrección de Entregas</h3>
-                    <select id="select-tareas-entregas" onchange="cargarEntregasDeTarea()" class="select-full"></select>
-                    <div id="tabla-entregas-render" class="entregas-grid"></div>
-                </div>
+                </section>
             </main>
         </div>
     </div>
 
-    <div id="section-alumno" class="container-dashboard hidden">
-        <header class="dashboard-header-alumno">
-            <div>
-                <h2>Mi Aula Virtual</h2>
-                <p>Estudiante: <span id="lbl-estudiante-nombre">...</span> | Curso: <span id="lbl-estudiante-curso">...</span></p>
-            </div>
-            <div class="alumno-header-links">
-                <a id="lnk-estudiante-wa" href="#" target="_blank" class="btn-whatsapp">💬 Grupo de WhatsApp</a>
-                <button onclick="logout()" class="btn-danger-sm">Salir</button>
-            </div>
-        </header>
+    <script>
+        // Inicializar los iconos de Lucide al cargar
+        document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
 
-        <div class="layout-alumno-body">
-            <nav class="sidebar-temas">
-                <h3>📂 Índice de Temas</h3>
-                <div id=\"alumno-indice-temas\"></div>
-            </nav>
+        // Gestión Global de Vistas de la Single Page Application (SPA)
+        function switchView(viewId) {
+            ['view-login', 'view-login-docente', 'view-primer-ingreso', 'view-docente', 'view-alumno'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+        }
 
-            <main class="feed-tareas">
-                <div id="lbl-estudiante-alertas" class="alerta-urgente hidden"></div>
+        // Mostrar u ocultar la clave (Función Ojo)
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
 
-                <section class="card">
-                    <h3>🚀 Actividades Pendientes (Urgentes Primero)</h3>
-                    <div id="alumno-tareas-urgentes"></div>
-                </section>
+        // Envío de Formulario de Autenticación Principal
+        document.getElementById('form-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('login-nombre').value;
+            const contrasena = document.getElementById('login-clave').value;
 
-                <section class="card">
-                    <h3>✅ Actividades Ya Realizadas</h3>
-                    <div id="alumno-tareas-viejas"></div>
-                </section>
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, contrasena, esDocente: false })
+            });
+            const data = await res.json();
 
-                <section class="card gemini-container">
-                    <h3>🤖 Consultar a Gemini AI</h3>
-                    <p class="subtext-ia">¿Tenés dudas con una ecuación, teoría o querés verificar tu procedimiento? Preguntale a la IA:</p>
-                    <div id="gemini-chat-logs" class="chat-logs"></div>
-                    <div class="chat-input-row">
-                        <input type="text" id="gemini-input-text" placeholder="Escribe tu duda aquí...">
-                        <button onclick="enviarMensajeGemini()" class="btn-primary">Preguntar</button>
+            if (res.ok) {
+                if (data.primerIngreso) {
+                    switchView('view-primer-ingreso');
+                } else {
+                    switchView('view-alumno');
+                    cargarPanelAlumno();
+                }
+            } else {
+                alert(data.error);
+            }
+        });
+
+        // Autenticación de Profesora
+        document.getElementById('form-login-docente').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const contrasena = document.getElementById('docente-clave').value;
+
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ esDocente: true, contrasena })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                switchView('view-docente');
+                cargarDashboardDocente();
+            } else {
+                alert(data.error);
+            }
+        });
+
+        // Cambio de Contraseña de Alumno Requerido
+        document.getElementById('form-primer-ingreso').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nuevaClave = document.getElementById('nueva-clave').value;
+
+            const res = await fetch('/api/alumno/cambiar-clave', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nuevaClave })
+            });
+
+            if (res.ok) {
+                switchView('view-alumno');
+                cargarPanelAlumno();
+            } else {
+                const data = await res.json();
+                alert(data.error);
+            }
+        });
+
+        // Interacción Directa con la API de Inteligencia Artificial Gemini
+        async function consultarGemini() {
+            const dudaInput = document.getElementById('input-gemini');
+            const respuestaDiv = document.getElementById('respuesta-gemini');
+            const duda = dudaInput.value.trim();
+
+            if(!duda) return;
+            respuestaDiv.classList.remove('hidden');
+            respuestaDiv.innerText = "Pensando una explicación matemática clara para vos...";
+
+            const res = await fetch('/api/gemini/consultar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ duda })
+            });
+            const data = await res.json();
+            
+            if(res.ok) {
+                respuestaDiv.innerText = data.respuesta;
+            } else {
+                respuestaDiv.innerText = "Ocurrió un inconveniente al consultar con la IA.";
+            }
+            dudaInput.value = "";
+        }
+
+        // Carga y renderizado dinámico de la interfaz del Alumno
+        async function cargarPanelAlumno() {
+            const res = await fetch('/api/alumno/tareas');
+            const tareas = await res.json();
+
+            const contenedor = document.getElementById('contenedor-actividades-alumno');
+            const indiceNav = document.getElementById('alumno-indice-temas');
+            contenedor.innerHTML = "";
+            indiceNav.innerHTML = "";
+
+            const temasUnicos = new Set();
+
+            tareas.forEach(tarea => {
+                temasUnicos.add(tarea.tema);
+
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-2xl border bg-white transition shadow-sm ${tarea.realizada ? 'opacity-65 border-gray-100' : 'border-blue-100 ring-1 ring-blue-50'}`;
+                
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-[10px] bg-gray-100 font-bold px-2 py-1 rounded text-gray-500 uppercase">${tarea.tema}</span>
+                            <h3 class="font-bold text-gray-900 mt-1">${tarea.titulo}</h3>
+                            <p class="text-xs text-gray-400 mt-1">Fecha límite: ${new Date(tarea.fecha_entrega).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                            ${tarea.realizada ? 
+                                `<span class="text-green-600 bg-green-50 text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i> Terminada</span>` : 
+                                `<button class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition">Marcar como Hecha</button>`
+                            }
+                        </div>
                     </div>
-                </section>
-            </main>
-        </div>
-    </div>
+                `;
+                contenedor.appendChild(card);
+            });
 
-    <div id="modal-curso" class="modal-overlay hidden">
-        <div class="modal-card">
-            <h3>Crear Curso</h3>
-            <input type="text" id="nuevo-curso-nombre" placeholder="Nombre (Ej: 4° Año A)" style="width:100%; margin-bottom:10px;">
-            <input type="text" id="nuevo-curso-whatsapp" placeholder="Link de WhatsApp (Opcional)" style="width:100%; margin-bottom:15px;">
-            <div class="modal-buttons">
-                <button onclick="crearCurso()" class="btn-success">Guardar</button>
-                <button onclick="cerrarModalCurso()" class="btn-secondary">Cancelar</button>
-            </div>
-        </div>
-    </div>
+            // Llenar el índice lateral interactivo para los alumnos
+            temasUnicos.forEach(tema => {
+                const link = document.createElement('a');
+                link.href = "#";
+                link.className = "block px-3 py-2 text-sm font-medium rounded-xl text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition";
+                link.innerText = tema;
+                indiceNav.appendChild(link);
+            });
 
-    <div id="modal-tarea" class="modal-overlay hidden">
-        <div class="modal-card modal-wide">
-            <h3>Nueva Tarea para el Banco Global</h3>
-            <form id="form-nueva-tarea">
-                <input type="text" id="t-titulo" placeholder="Título de la actividad" required>
-                <input type="text" id="t-carpeta" placeholder="Unidad / Tema (Ej: Unidad 1: Inecuaciones)" required>
-                <textarea id="t-desc" placeholder="Descripción de las consignas..."></textarea>
-                <input type="text" id="t-link" placeholder="Enlace de soporte (YouTube, GeoGebra...)">
-                <input type="date" id="t-fecha" placeholder="Fecha límite de entrega">
-                <select id="t-prerrequisito"><option value="">Sin prerrequisito</option></select>
-                <label><input type="checkbox" id="t-entrega"> Requiere subir archivo/foto de entrega</label>
-                <input type="file" id="t-file">
-                <div class="modal-buttons" style="margin-top:15px;">
-                    <button type="submit" class="btn-success">Guardar en Banco</button>
-                    <button type="button" onclick="cerrarModalTarea()" class="btn-secondary">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
+            lucide.createIcons();
+        }
 
-    <script src="app.js"></script>
+        // Cargar los Datos de Gestión de la Profesora
+        async function cargarDashboardDocente() {
+            const res = await fetch('/api/docente/dashboard');
+            const data = await res.json();
+
+            // Renderizar cursos en la interfaz docente
+            const contenedorCursos = document.getElementById('lista-cursos');
+            contenedorCursos.innerHTML = "";
+            data.cursos.forEach(c => {
+                contenedorCursos.innerHTML += `
+                    <button class="px-4 py-2 bg-blue-50 text-blue-700 border border-blue-100 font-bold rounded-xl text-sm hover:bg-blue-100 transition inline-flex items-center gap-1">
+                        ${c.nombre} <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </button>
+                `;
+            });
+
+            // Renderizar alumnos inscritos
+            const tablaAlumnos = document.getElementById('tabla-alumnos');
+            tablaAlumnos.innerHTML = "";
+            data.alumnos.forEach(a => {
+                tablaAlumnos.innerHTML += `
+                    <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition">
+                        <td class="py-3.5 font-medium text-gray-900">${a.nombre} <span class="text-xs text-gray-400 font-normal">(${a.curso_nombre})</span></td>
+                        <td class="py-3.5 text-blue-600 font-bold">0%</td>
+                        <td class="py-3.5 text-right space-x-1">
+                            <button class="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-xs rounded-lg shadow-sm">Gestionar</button>
+                            <button onclick="reiniciarClave(${a.id})" class="px-2 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg" title="Reiniciar Clave"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            lucide.createIcons();
+        }
+
+        // Reiniciar clave de alumno a los valores por defecto
+        async function reiniciarClave(id) {
+            if(confirm("¿Estás segura de reiniciar la clave de este alumno a 'usuario'?")) {
+                const res = await fetch(`/api/alumnos/${id}/reiniciar-clave`, { method: 'POST' });
+                if(res.ok) alert("Clave reiniciada con éxito.");
+            }
+        }
+
+        // Exportar Backup de Seguridad Total en JSON
+        async function exportarBackup() {
+            window.open('/api/docente/exportar', '_blank');
+        }
+
+        // Logout General
+        function logout() {
+            switchView('view-login');
+        }
+    </script>
 </body>
 </html>
