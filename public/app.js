@@ -13,7 +13,69 @@ document.getElementById('btn-toggle-pwd').addEventListener('click', () => {
         document.getElementById('btn-toggle-pwd').textContent = '👁️';
     }
 });
+// --- SISTEMA DE AUTOCOMPLETADO PREDICTIVO PARA LOGIN ---
+let listaAlumnosCache = [];
 
+// Al cargar la página, traemos los usuarios para tener el buscador listo
+async function precargarUsuariosParaLogin() {
+    try {
+        const res = await fetch('/api/usuarios');
+        const usuarios = await res.json();
+        // Guardamos solo los que tienen rol de alumno para proteger la privacidad de la profesora
+        listaAlumnosCache = usuarios.filter(u => u.rol === 'alumno').map(u => u.username);
+    } catch (err) {
+        console.error("No se pudieron precargar los usuarios para el autocompletado:", err);
+    }
+}
+
+function filtrarUsuariosLogin(busqueda) {
+    const cajaSugerencias = document.getElementById('login-sugerencias');
+    const texto = busqueda.trim().toLowerCase();
+
+    if (!texto) {
+        cajaSugerencias.innerHTML = '';
+        cajaSugerencias.classList.add('hidden');
+        return;
+    }
+
+    // Filtramos los nombres que comiencen o contengan las letras tipeadas
+    const filtrados = listaAlumnosCache.filter(username => 
+        username.toLowerCase().startsWith(texto)
+    );
+
+    if (filtrados.length === 0) {
+        cajaSugerencias.innerHTML = '';
+        cajaSugerencias.classList.add('hidden');
+        return;
+    }
+
+    // Renderizamos las opciones de coincidencia
+    cajaSugerencias.innerHTML = filtrados.map(username => `
+        <div class="sugerencia-item" onclick="seleccionarUsuarioSugerido('${username}')">${username}</div>
+    `).join('');
+    
+    cajaSugerencias.classList.remove('hidden');
+}
+
+function seleccionarUsuarioSugerido(username) {
+    document.getElementById('login-username').value = username;
+    const cajaSugerencias = document.getElementById('login-sugerencias');
+    cajaSugerencias.innerHTML = '';
+    cajaSugerencias.classList.add('hidden');
+    
+    // Enfocamos directamente el campo contraseña para agilizar el ingreso
+    document.getElementById('login-password').focus();
+}
+
+// Ocultar la caja si el alumno hace clic fuera del input
+document.addEventListener('click', (e) => {
+    if (e.target.id !== 'login-username') {
+        document.getElementById('login-sugerencias').classList.add('hidden');
+    }
+});
+
+// Forzamos la ejecución de la precarga al iniciar el script global
+precargarUsuariosParaLogin();
 // --- ACCESO / LOGIN ---
 document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
