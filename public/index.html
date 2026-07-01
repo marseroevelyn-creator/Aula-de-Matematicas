@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeltaMath - Aula Digital Incorporada</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- BLOQUE GLOBAL: LOGIN ACCESIBLE -->
+    <div id="section-login" class="container-auth">
+        <div class="card login-box">
+            <h2>Acceso al Aula de Matemática</h2>
+            <form id="login-form">
+                <label>Usuario</label>
+                <input type="text" id="login-username" placeholder="Ingresa tu usuario asignado" required>
+                
+                <label>Contraseña</label>
+                <div class="password-container">
+                    <input type="password" id="login-password" value="usuario" required>
+                    <button type="button" id="btn-toggle-pwd" class="btn-eye">👁️</button>
+                </div>
+                
+                <button type="submit" class="btn-primary">Ingresar a la Plataforma</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- BLOQUE GLOBAL: INTERFAZ COMPLETA DE LA PROFESORA -->
+    <div id="section-profesora" class="hidden container-dashboard">
+        <header class="navbar">
+            <h1>Panel Administrativo y Pedagógico</h1>
+            <div>
+                <button onclick="descargarCopiaSeguridad()" class="btn-secondary">💾 Exportar Respaldo</button>
+                <button onclick="logout()" class="btn-danger">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <!-- Columna Izquierda: Cursos y Alumnos -->
+            <aside class="sidebar-prof">
+                <div class="card">
+                    <h3>Mis Cursos</h3>
+                    <form id="form-crear-curso">
+                        <input type="text" id="curso-nombre" placeholder="Nombre (Ej: 4to Año A)" required>
+                        <input type="url" id="curso-wa" placeholder="Link de WhatsApp">
+                        <button type="submit" class="btn-success">Crear Curso</button>
+                    </form>
+                    <hr>
+                    <div id="container-cursos-lista"></div>
+                </div>
+
+                <div id="card-alumnos-gestion" class="card hidden">
+                    <h3>Alumnos en: <span id="nombre-curso-seleccionado"></span></h3>
+                    <form id="form-crear-alumno">
+                        <input type="text" id="alumno-username" placeholder="Nombre completo del alumno" required>
+                        <button type="submit" class="btn-success">Registrar Alumno</button>
+                    </form>
+                    <ul id="lista-alumnos-container"></ul>
+                </div>
+            </aside>
+
+            <!-- Área Central: Banco de Tareas y Revisión de Entregas -->
+            <main class="content-prof">
+                <div class="card">
+                    <h3>Banco de Tareas Automatizado</h3>
+                    <input type="text" id="input-buscar-tarea" placeholder="🔍 Filtrar tareas por título o tema..." oninput="renderizarBancoTareas()">
+                    
+                    <form id="form-nueva-tarea" class="grid-form">
+                        <input type="text" id="t-titulo" placeholder="Título de la Actividad" required>
+                        <input type="text" id="t-carpeta" placeholder="Tema / Carpeta (Ej: Polinomios)" required>
+                        <textarea id="t-desc" placeholder="Instrucciones o consignas de la actividad..."></textarea>
+                        
+                        <label>Subir archivo desde PC (Documento, PDF, Excel, GeoGebra):</label>
+                        <input type="file" id="t-file">
+                        
+                        <input type="url" id="t-link" placeholder="Enlace externo (YouTube, GeoGebra Web, Drive)">
+                        
+                        <label><input type="checkbox" id="t-entrega"> Requiere que el alumno suba una entrega</label>
+                        
+                        <label>Fecha Límite de Entrega:</label>
+                        <input type="datetime-local" id="t-fecha">
+
+                        <label>Desbloquear solo si completa otra tarea anterior (Opcional):</label>
+                        <select id="t-prerrequisito"><option value="">Ninguna (Aparición inmediata)</option></select>
+
+                        <label>Asignación:</label>
+                        <select id="t-asignacion-tipo">
+                            <option value="todo_el_curso">Todo el Curso Actual Seleccionado</option>
+                            <option value="banco">Solo Guardar en Banco (Sin asignar)</option>
+                        </select>
+
+                        <button type="submit" class="btn-primary">Guardar y Procesar Actividad</button>
+                    </form>
+
+                    <div id="banco-tareas-render"></div>
+                </div>
+
+                <!-- Control de Calificaciones y Descargas -->
+                <div class="card">
+                    <h3>Centro de Entregas y Evaluaciones</h3>
+                    <select id="select-tareas-entregas" onchange="cargarEntregasDeTarea()">
+                        <option value="">Selecciona una tarea para auditar entregas</option>
+                    </select>
+                    <div id="tabla-entregas-render"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- BLOQUE GLOBAL: INTERFAZ COMPLETA DEL ALUMNO -->
+    <div id="section-alumno" class="hidden container-alumno">
+        <!-- Encabezado Solicitado Obligatorio -->
+        <header id="header-estudiante" class="student-header">
+            <div class="info-user">
+                <h2>Hola, <span id="lbl-estudiante-nombre"></span> 👋</h2>
+                <p>Curso: <span id="lbl-estudiante-curso"></span></p>
+            </div>
+            <div class="info-curso">
+                <a id="lnk-estudiante-wa" href="#" target="_blank" class="btn-whatsapp">💬 Grupo de WhatsApp</a>
+                <div class="fechas-caja">
+                    <strong>Próximos Exámenes / Fechas:</strong>
+                    <ul id="lbl-estudiante-fechas"><li>Sin eventos registrados</li></ul>
+                </div>
+                <div id="lbl-estudiante-alertas" class="alerta-vencidas"></div>
+            </div>
+            <button onclick="logout()" class="btn-danger">Salir</button>
+        </header>
+
+        <div class="layout-alumno-body">
+            <!-- Índice lateral estructurado de más viejo a más nuevo -->
+            <nav class="sidebar-temas">
+                <h3>📂 Índice de Temas</h3>
+                <div id="alumno-indice-temas"></div>
+            </nav>
+
+            <!-- Contenido Principal de Tareas Organizadas Cronológicamente -->
+            <main class="feed-tareas">
+                <section class="card">
+                    <h3>🚀 Actividades Pendientes (Urgentes Primero)</h3>
+                    <div id="alumno-tareas-urgentes"></div>
+                </section>
+
+                <section class="card">
+                    <h3>✅ Actividades Ya Realizadas</h3>
+                    <div id="alumno-tareas-viejas"></div>
+                </section>
+
+                <!-- Chat interactivo real con Gemini AI -->
+                <section class="card gemini-container">
+                    <h3>🤖 Consultas Matemáticas las 24hs (Tutor Gemini)</h3>
+                    <div id="gemini-chat-logs" class="chat-logs"></div>
+                    <div class="chat-input-row">
+                        <input type="text" id="gemini-input-text" placeholder="Escribe tu duda (Ej: ¿Cómo despejo la x en 2x + 5 = 11?)...">
+                        <button onclick="enviarMensajeGemini()" class="btn-primary">Preguntar</button>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
