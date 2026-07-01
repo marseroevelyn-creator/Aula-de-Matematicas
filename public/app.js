@@ -121,6 +121,75 @@ async function eliminarCurso(id) {
 }
 
 // GESTIÓN ALUMNO POR PROFESOR
+// Variable global para saber qué curso está mirando la profesora
+let cursoSeleccionadoProfesorId = null;
+
+// Ejecutar al cambiar el select de cursos en el panel de la profesora
+async function cambiarCursoActivoProfesor(cursoId) {
+    cursoSeleccionadoProfesorId = cursoId;
+    const contenedorAlumnos = document.getElementById('vista-alumnos-curso');
+    
+    if (!cursoId) {
+        contenedorAlumnos.innerHTML = '<p style="color: var(--text-muted); font-size: 13px; text-align: center;">Selecciona un curso arriba para ver sus alumnos.</p>';
+        return;
+    }
+
+    contenedorAlumnos.innerHTML = '<p style="text-align:center; font-size:13px;">Cargando alumnos...</p>';
+
+    try {
+        // Pedimos al backend los usuarios del sistema
+        const res = await fetch('/api/usuarios'); 
+        const usuarios = await res.json();
+
+        // Filtramos solo los que tengan rol 'alumno' y pertenezcan al curso seleccionado
+        const alumnosDelCurso = usuarios.filter(u => u.rol === 'alumno' && String(u.curso_id) === String(cursoId));
+
+        if (alumnosDelCurso.length === 0) {
+            contenedorAlumnos.innerHTML = '<p style="color: var(--text-muted); font-size: 13px; text-align: center;">No hay alumnos registrados en este curso todavía.</p>';
+            return;
+        }
+
+        // Renderizamos la lista de alumnos con un botón para eliminar si fuera necesario
+        contenedorAlumnos.innerHTML = alumnosDelCurso.map(alumno => `
+            <div class="item-lista-accion">
+                <div>
+                    <strong style="display:block; font-size:14px;">${alumno.username}</strong>
+                    <span style="font-size:11px; color:var(--text-muted);">ID: ${alumno.id} ${alumno.debe_cambiar_clave ? '⚠️ Clave inicial' : '✅ Clave cambiada'}</span>
+                </div>
+                <div>
+                    <button onclick="eliminarUsuario('${alumno.id}')" class="btn-danger" style="padding: 2px 6px; font-size: 11px;">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+
+        // OPCIONAL: Si tienes una función para filtrar las entregas de tareas por curso, puedes llamarla aquí
+        // Ej: actualizarTablaEntregas(cursoId);
+
+    } catch (error) {
+        console.error("Error al cargar alumnos por curso:", error);
+        contenedorAlumnos.innerHTML = '<p style="color: var(--danger); font-size: 13px;">Error al cargar la lista.</p>';
+    }
+}
+
+// Modificación al inicializar la profesora: Llenar el selector de cursos además de la lista común
+async function inicializarProfesora() {
+    // ... Tu lógica actual de cargar tareas y cursos ...
+    
+    // Asegurémonos de poblar el nuevo select de filtros:
+    const res = await fetch('/api/cursos');
+    const cursos = await res.json();
+    
+    const selectFiltro = document.getElementById('filtro-curso-profesora');
+    // Limpiamos opciones viejas dejando la por defecto
+    selectFiltro.innerHTML = '<option value="">-- Seleccione un curso --</option>'; 
+    
+    cursos.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.nombre;
+        selectFiltro.appendChild(opt);
+    });
+}
 async function cargarAlumnos() {
     const res = await fetch(`/api/alumnos/curso/${cursoActualId}`);
     const alumnos = await res.json();
