@@ -578,7 +578,22 @@ async function guardarCorreccion(asignacionId, aprobar) {
     alert("Corrección registrada en la base de datos.");
     cargarEntregasDeTarea();
 }
-
+// Llamar a esto cuando la profesora pulse "Reasignar Tarea" porque está mal hecha
+async function reasignarTareaAlumno(asignacionId) {
+    const motivo = prompt("Escribí el motivo del rechazo o sugerencia para el alumno:");
+    if (motivo === null) return;
+    
+    const res = await fetch(`/api/asignaciones/${asignacionId}/reasignar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivo })
+    });
+    const data = await res.json();
+    if (data.success) {
+        alert("Tarea reasignada al alumno con éxito.");
+        location.reload();
+    }
+}
 
 // =========================================================================
 // --- SECCIÓN: CONFIGURACIÓN Y CONTENIDOS DEL ALUMNO (FEED INTERACTIVO) ---
