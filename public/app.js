@@ -468,3 +468,18 @@ document.getElementById('importar-archivo-directo')?.addEventListener('change', 
     };
     lector.readAsText(archivo);
 });
+// --- FUNCIÓN SECRETA PARA MOSTRAR LA ZONA DE IMPORTACIÓN SOLO A LA PROFESORA ---
+function verificarSiEsProfe() {
+    const campoUsuario = document.getElementById('login-username');
+    const zonaDocente = document.getElementById('zona-docente-oculta');
+    
+    if (campoUsuario && zonaDocente) {
+        // Si lo que escribís en el cuadro es exactamente "profesora", el botón aparece
+        if (campoUsuario.value.trim().toLowerCase() === 'profesora') {
+            zonaDocente.style.display = 'block';
+        } else {
+            // Si es cualquier otra cosa (un alumno), se mantiene totalmente invisible
+            zonaDocente.style.display = 'none';
+        }
+    }
+}
