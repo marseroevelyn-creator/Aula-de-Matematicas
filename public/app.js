@@ -289,6 +289,7 @@ async function inicializarProfesora() {
     });
 }
 // --- TU FUNCIÓN ACTUALIZADA: CARGAR ALUMNOS EN EL CURSO ACTIVO ---
+// --- FUNCIÓN CORREGIDA: CARGAR ALUMNOS ASOCIADOS AL CURSO ACTIVO ---
 async function cargarAlumnos() {
     const userInput = document.getElementById('nuevo-alumno-username');
     const passInput = document.getElementById('nuevo-alumno-password');
@@ -299,7 +300,7 @@ async function cargarAlumnos() {
 
     // 2. VALIDACIÓN CLAVE: Verificar que la profesora haya seleccionado un curso arriba
     if (!cursoSeleccionadoProfesorId) {
-        alert("⚠️ Por favor, selecciona primero un 'Curso Activo' en el panel de arriba para saber en qué curso registrar al alumno.");
+        alert("⚠️ Por favor, selecciona primero un 'Curso Activo' en el selector de arriba para saber en qué curso registrar al alumno.");
         return;
     }
 
@@ -309,7 +310,7 @@ async function cargarAlumnos() {
     }
 
     try {
-        // 3. Enviamos la petición al servidor asociándola al curso activo
+        // 3. Enviamos la petición al servidor vinculándolo al curso activo
         const res = await fetch('/api/usuarios', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -317,7 +318,7 @@ async function cargarAlumnos() {
                 username: username, 
                 password: password, 
                 rol: 'alumno', 
-                curso_id: parseInt(cursoSeleccionadoProfesorId) // Vinculamos dinámicamente con el curso elegido
+                curso_id: parseInt(cursoSeleccionadoProfesorId) // Esto los mete en el curso correcto
             })
         });
         const data = await res.json();
@@ -325,11 +326,11 @@ async function cargarAlumnos() {
         if (data.id || data.success) {
             alert(`👤 Alumno "${username}" registrado correctamente.`);
             
-            // Limpiamos el formulario
+            // Limpiamos el formulario para el siguiente alumno
             userInput.value = '';
             passInput.value = 'matematica123'; // Clave por defecto conveniente
             
-            // 4. Refrescamos inmediatamente la lista de alumnos del curso para ver el cambio en tiempo real
+            // 4. Refrescamos inmediatamente la lista de alumnos del curso activo para verlo en pantalla
             cambiarCursoActivoProfesor(cursoSeleccionadoProfesorId);
         } else {
             alert("Error al registrar alumno: " + (data.error || "Asegúrate de que el usuario no esté repetido."));
