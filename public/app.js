@@ -17,12 +17,20 @@ document.getElementById('btn-toggle-pwd').addEventListener('click', () => {
     }
 });
 
-// --- ACCESO RÁPIDO PARA PRUEBAS (BOTÓN PANEL DOCENTE) ---
+// --- REDIRECCIÓN AL ACCESO DEL PANEL DOCENTE (CORREGIDO) ---
 if (document.getElementById('btn-ir-admin')) {
     document.getElementById('btn-ir-admin').addEventListener('click', () => {
+        // Rellena el usuario automáticamente para ahorrarle tiempo
         document.getElementById('login-username').value = 'profesora';
-        document.getElementById('login-password').value = 'admin123';
-        document.getElementById('login-form').requestSubmit();
+        
+        // Deja el campo de contraseña vacío y le da el foco para que la profesora la escriba manualmente
+        const pwdInput = document.getElementById('login-password');
+        pwdInput.value = '';
+        pwdInput.focus();
+        
+        // Limpia cualquier sugerencia predictiva que haya quedado flotando
+        document.getElementById('login-sugerencias').innerHTML = '';
+        document.getElementById('login-sugerencias').classList.add('hidden');
     });
 }
 
