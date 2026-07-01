@@ -427,6 +427,25 @@ app.post('/api/sistema/restaurar', async (req, res) => {
         res.json({ success: true, message: "Base de datos restaurada con éxito total." });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
-
+// --- ENDPOINT PARA REINICIAR CONTRASEÑA DE ALUMNOS ---
+app.post('/api/usuarios/:id/reiniciar', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Actualiza la contraseña a 'usuario' y activa 'debe_cambiar_clave' en TRUE
+        const resultado = await pool.query(
+            'UPDATE usuarios SET password = $1, debe_cambiar_clave = true WHERE id = $2',
+            ['usuario', id]
+        );
+        
+        if (resultado.rowCount === 0) {
+            return res.status(404).json({ success: false, error: "Usuario no encontrado." });
+        }
+        
+        res.json({ success: true, message: "Contraseña restablecida correctamente a 'usuario'." });
+    } catch (err) {
+        console.error("Error al reiniciar clave en el servidor:", err);
+        res.status(500).json({ success: false, error: "Error interno de base de datos." });
+    }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`[OK] Servidor corriendo en http://localhost:${PORT}`));
