@@ -1,7 +1,7 @@
 {
   "name": "aula-virtual-matematica",
   "version": "1.0.0",
-  "description": "Plataforma educativa integrada con Neon PostgreSQL, Cloudinary y Gemini AI",
+  "description": "Aula Virtual con Neon PostgreSQL, Cloudinary y Gemini AI",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
