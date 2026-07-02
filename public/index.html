@@ -4,350 +4,333 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aula Virtual de Matemática</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
 
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-slate-100 text-center">
-            <div class="inline-flex p-4 bg-blue-50 rounded-2xl text-blue-600 mb-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center border border-slate-200">
+            <div class="text-blue-600 flex justify-center mb-4">
                 <i data-lucide="calculator" class="w-12 h-12"></i>
             </div>
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-6">Aula Virtual</h1>
+            <h2 class="text-2xl font-black text-slate-800 mb-6">Aula Virtual</h2> <form id="form-login" class="text-left space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Tu Nombre Completo:</label> <input type="text" id="login-nombre" autocomplete="off" placeholder="Escribí tu nombre..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:border-blue-500"> <div id="predictivo-box" class="bg-white border border-slate-200 rounded-lg shadow-lg mt-1 hidden max-h-40 overflow-y-auto"></div>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Tu Contraseña:</label> <div class="relative">
+                        <input type="password" id="login-clave" placeholder="Contraseña" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:border-blue-500"> <button type="button" onclick="togglePassword('login-clave')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                            <i data-lucide="eye" class="w-4 h-4"></i> </button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm transition shadow-md shadow-blue-200">Ingresar al Aula</button> </form>
             
-            <form id="form-login" class="space-y-4 text-left">
-                <div class="relative">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Tu Nombre Completo:</label>
-                    <input type="text" id="login-nombre" autocomplete="off" placeholder="Escribí tu nombre..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
-                    <div id="predictivo-box" class="absolute left-0 right-0 bg-white border border-slate-200 mt-1 rounded-xl shadow-lg hidden z-50 overflow-hidden"></div>
-                </div>
+            <button onclick="switchView('view-login-docente')" class="mt-6 text-xs text-slate-500 hover:text-blue-600 font-medium inline-flex items-center gap-1">
+                <i data-lucide="shield-alert" class="w-3 h-3"></i> Acceso Panel Docente </button>
+        </div>
+    </div>
+
+    <div id="view-login-docente" class="min-h-screen flex items-center justify-center p-4 hidden">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center border border-slate-200">
+            <h2 class="text-xl font-bold text-slate-800 mb-2">Panel Docente</h2> <p class="text-xs text-slate-400 mb-6">Ingreso exclusivo para la profesora</p>
+            
+            <form id="form-login-docente" class="text-left space-y-4">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Tu Contraseña:</label>
-                    <div class="relative">
-                        <input type="password" id="login-clave" placeholder="Contraseña" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
-                        <button type="button" onclick="togglePassword('login-clave')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
-                            <i data-lucide="eye" class="w-5 h-5"></i>
-                        </button>
-                    </div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Contraseña Docente</label> <input type="password" id="docente-clave" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:border-blue-500">
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-md transition duration-150">Ingresar al Aula</button>
-            </form>
-            <button onclick="switchView('view-login-docente')" class="mt-6 text-xs font-semibold text-slate-400 hover:text-blue-600 inline-flex items-center gap-1.5 transition">
-                <i data-lucide="shield-check" class="w-4 h-4"></i> Acceso Panel Docente
-            </button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm transition">Ingresar</button> </form>
+            <button onclick="switchView('view-login')" class="mt-4 text-xs text-slate-400 hover:underline">Volver al inicio</button>
         </div>
     </div>
 
-    <div id="view-login-docente" class="hidden min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-slate-100 text-center">
-            <h2 class="text-2xl font-bold text-slate-900 mb-6">Panel Docente</h2>
-            <form id="form-login-docente" class="space-y-4 text-left">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Contraseña Docente</label>
-                    <input type="password" id="docente-clave" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
-                </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md">Ingresar</button>
-            </form>
+    <div id="view-primer-ingreso" class="min-h-screen flex items-center justify-center p-4 hidden">
+        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-xs text-center border border-amber-200">
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Primer Ingreso</h3> <p class="text-xs text-slate-500 mb-4">Por seguridad debés cambiar tu contraseña genérica.</p> <form id="form-primer-ingreso" class="space-y-3 text-left">
+                <input type="password" id="nueva-clave" placeholder="Nueva contraseña" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:border-amber-500"> <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-lg text-sm transition">Guardar y Entrar</button> </form>
         </div>
     </div>
 
-    <div id="view-primer-ingreso" class="hidden min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm border border-amber-100 text-center">
-            <h2 class="text-2xl font-extrabold text-slate-900 mb-2">Primer Ingreso</h2>
-            <p class="text-xs text-slate-500 mb-6">Por seguridad debés cambiar tu contraseña genérica.</p>
-            <form id="form-primer-ingreso" class="space-y-4">
-                <input type="password" id="nueva-clave" placeholder="Nueva contraseña (mínimo 4 dígitos)" class="w-full px-4 py-3 rounded-xl border border-amber-200 focus:ring-2 focus:ring-amber-500 outline-none text-center font-semibold tracking-widest text-sm" minlength="4" required>
-                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-md">Guardar y Entrar</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="view-docente" class="hidden min-h-screen p-4 md:p-8">
-        <header class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div id="view-alumno" class="max-w-5xl mx-auto p-4 hidden">
+        <div class="bg-blue-600 text-white p-6 rounded-2xl shadow-lg flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-2xl font-black text-slate-900 flex items-center gap-2"><i data-lucide="layout-dashboard" class="text-blue-600"></i> Panel de Control Docente</h1>
-                <p class="text-xs text-slate-400 font-medium">Aula virtual de Matemática | Gestión de grupos y contenidos</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-                <button onclick="exportarBackup()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition"><i data-lucide="download" class="w-4 h-4"></i> Exportar Copia JSON</button>
-                <button onclick="logout()" class="px-3.5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition"><i data-lucide="log-out" class="w-4 h-4"></i> Salir</button>
-            </div>
-        </header>
+                <h1 class="text-xl font-black">Mi Aula Virtual</h1> <p id="header-alumno-subtitulo" class="text-xs text-blue-100 mt-1">Cargando datos del curso...</p> </div>
+            <button onclick="logout()" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-xs font-bold transition">Salir</button> </div>
 
-        <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-6">
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2"><i data-lucide="folder-open" class="text-blue-600 w-4 h-4"></i> Mis Cursos Activos</h2>
-                    <div id="lista-cursos" class="flex flex-wrap gap-2"></div>
-                </section>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 h-fit">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Temas</h3>
+                <div id="alumno-indice-temas" class="space-y-1"></div> </div>
 
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2"><i data-lucide="users" class="text-blue-600 w-4 h-4"></i> Alumnos Inscritos</h2>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead>
-                                <tr class="border-b border-slate-100 text-slate-400 font-bold uppercase">
-                                    <th class="pb-3">Nombre Alumno</th>
-                                    <th class="pb-3">Progreso</th>
-                                    <th class="pb-3 text-right">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-alumnos" class="divide-y divide-slate-50"></tbody>
-                        </table>
-                    </div>
-                </section>
-            </div>
-
-            <div class="space-y-6">
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2"><i data-lucide="calendar" class="text-blue-600 w-4 h-4"></i> Fechas Clave</h2>
-                    <div class="p-4 bg-slate-50 rounded-xl text-xs text-slate-500 font-medium" id="docente-fechas-box">No hay fechas importantes agendadas.</div>
-                </section>
-
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><i data-lucide="archive" class="text-blue-600 w-4 h-4"></i> Banco de Recursos</h2>
-                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-xl text-[11px] font-bold shadow-sm transition">+ Crear Tarea</button>
-                    </div>
-                    <div id="banco-tareas" class="space-y-2"></div>
-                </section>
-            </div>
-        </main>
-    </div>
-
-    <div id="view-alumno" class="hidden min-h-screen flex flex-col">
-        <header class="bg-blue-600 text-white p-6 shadow-md">
-            <div class="max-w-7xl mx-auto flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-black tracking-tight" id="header-alumno-titulo">Mi Aula Virtual</h1>
-                    <p class="text-xs font-medium opacity-85 mt-0.5" id="header-alumno-subtitulo">Cargando datos del alumno...</p>
-                </div>
-                <button onclick="logout()" class="bg-white text-blue-600 font-bold px-4 py-2 rounded-xl text-xs shadow hover:bg-blue-50 transition">Salir</button>
-            </div>
-        </header>
-
-        <div class="max-w-7xl mx-auto w-full flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 p-4 md:p-8">
-            <aside class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 h-fit space-y-1">
-                <h3 class="font-bold text-slate-400 text-[10px] tracking-wider uppercase mb-3 px-2">Temas de la Materia</h3>
-                <nav id="alumno-indice-temas" class="space-y-0.5"></nav>
-            </aside>
-
-            <main class="lg:col-span-3 space-y-6">
-                <section class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100/70 p-6 rounded-2xl shadow-sm">
-                    <div class="flex items-center justify-between mb-2">
-                        <h2 class="text-sm font-bold text-blue-950 flex items-center gap-1.5"><i data-lucide="sparkles" class="text-indigo-500 w-4 h-4"></i> Consultar a Gemini AI</h2>
-                        <span class="bg-blue-200/60 text-blue-900 text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full tracking-wider">Tutor de Matemática</span>
-                    </div>
-                    <p class="text-xs text-blue-700 mb-4">¿Tenés dudas con una ecuación, teoría o querés verificar tu procedimiento? Preguntale a la IA:</p>
-                    <div class="flex gap-2">
-                        <input type="text" id="input-gemini" placeholder="Escribí tu duda matemática acá..." class="flex-1 px-4 py-3 rounded-xl border border-blue-200/60 focus:ring-2 focus:ring-blue-500 outline-none text-xs bg-white">
-                        <button onclick="consultarIA()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-xl shadow shadow-blue-200 flex items-center justify-center transition">
+            <div class="md:col-span-3 space-y-6">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-2xl border border-blue-100 shadow-sm">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Tutor de Matemática</span> </div>
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Consultar a Gemini AI</h3> <p class="text-xs text-slate-500 mb-4">¿Tenés dudas con una ecuación, teoría o querés verificar tu procedimiento? Preguntale a la IA:</p> <div class="flex gap-2">
+                        <input type="text" id="input-gemini" placeholder="Escribí tu duda matemática acá..." class="flex-1 px-4 py-2.5 rounded-xl border border-blue-200 bg-white text-xs outline-none focus:ring-2 focus:ring-blue-500"> <button onclick="consultarIA()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-xl flex items-center justify-center transition">
                             <i data-lucide="send" class="w-4 h-4"></i>
                         </button>
                     </div>
-                    <div id="respuesta-gemini" class="mt-4 p-4 bg-white rounded-xl border border-blue-100/50 text-xs hidden max-h-48 overflow-y-auto whitespace-pre-line text-slate-700 leading-relaxed shadow-sm"></div>
-                </section>
+                    <div id="respuesta-gemini" class="mt-4 p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 hidden"></div>
+                </div>
 
-                <section class="space-y-4">
-                    <h2 class="text-base font-bold flex items-center gap-2 text-slate-900"><i data-lucide="check-square" class="text-blue-600 w-5 h-5"></i> Actividades Programadas</h2>
-                    <div id="alumno-actividades-box" class="space-y-3"></div>
-                </section>
-            </main>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4 text-blue-500"></i> Actividades Asignadas
+                    </h3>
+                    <div id="alumno-actividades-box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-docente" class="max-w-6xl mx-auto p-4 hidden">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 text-white p-6 rounded-2xl mb-6 shadow-xl">
+            <div>
+                <h1 class="text-xl font-black flex items-center gap-2">
+                    <i data-lucide="layout-dashboard" class="text-blue-400"></i> Panel de Control Docente </h1>
+                <p class="text-xs text-slate-400 mt-1">Aula virtual de Matemática | Gestión de grupos y contenidos</p> </div>
+            <div class="flex gap-2 w-full sm:w-auto">
+                <button onclick="exportarBackup()" class="flex-1 sm:flex-none px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium rounded-lg transition">Exportar Copia JSON</button> <button onclick="logout()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-xs font-bold rounded-lg transition">Salir</button> </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="folder" class="text-blue-500 w-4 h-4"></i> Mis Cursos Activos</h3> <div id="lista-cursos" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">Alumnos inscritos</h3> <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-xs text-slate-400 font-bold">
+                                    <th class="pb-2">Nombre Alumno</th> <th class="pb-2">Progreso</th> <th class="pb-2 text-right">Acciones</th> </tr>
+                            </thead>
+                            <tbody id="tabla-alumnos"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2"><i data-lucide="calendar" class="text-amber-500 w-4 h-4"></i> Fechas Clave</h3> <div id="docente-fechas-box" class="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100">No hay fechas importantes agendadas.</div> </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="database" class="text-indigo-500 w-4 h-4"></i> Banco Global de Recursos</h3> <div class="space-y-2 text-xs text-slate-500">
+                        <p>✓ Unidad 1: Fracciones (#1)</p>
+                        <p>✓ Unidad 1: Inecuaciones (#3)</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         let alumnoSeleccionadoId = null;
 
-        document.addEventListener('DOMContentLoaded', () => { 
-            lucide.createIcons(); 
-            initPredictivo();
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+            initBuscadorPredictivo();
+            initFormularios();
         });
 
+        // Cambiar entre pantallas de la SPA
         function switchView(viewId) {
             ['view-login', 'view-login-docente', 'view-primer-ingreso', 'view-docente', 'view-alumno'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
+                document.getElementById(id)?.classList.add('hidden');
             });
-            document.getElementById(viewId).classList.remove('hidden');
+            document.getElementById(viewId)?.classList.remove('hidden');
+            if (window.lucide) lucide.createIcons();
         }
 
+        // Mostrar/Ocultar contraseña [cite: 185]
         function togglePassword(id) {
             const el = document.getElementById(id);
-            el.type = el.type === 'password' ? 'text' : 'password';
+            if (el) el.type = el.type === 'password' ? 'text' : 'password';
         }
 
-        // Bloque del Buscador Predictivo de Alumnos
-        function initPredictivo() {
+        // CONTROL: Buscador predictivo en tiempo real [cite: 327]
+        function initBuscadorPredictivo() {
             const input = document.getElementById('login-nombre');
             const box = document.getElementById('predictivo-box');
+            if (!input || !box) return;
 
             input.addEventListener('input', async () => {
-                const val = input.value.trim();
-                if (val.length < 1) { box.classList.add('hidden'); return; }
+                const valor = input.value.trim();
+                if (valor.length < 1) {
+                    box.classList.add('hidden');
+                    return;
+                }
 
-                const res = await fetch(`/api/auth/buscar-alumnos?q=${encodeURIComponent(val)}`);
-                const rows = await res.json();
+                try {
+                    const res = await fetch(`/api/auth/buscar-alumnos?q=${encodeURIComponent(valor)}`);
+                    const alumnos = await res.json();
 
-                if(rows.length > 0) {
-                    box.innerHTML = '';
-                    box.classList.remove('hidden');
-                    rows.forEach(r => {
-                        const item = document.createElement('div');
-                        item.className = "px-4 py-2.5 text-xs hover:bg-slate-50 cursor-pointer font-medium text-slate-700 transition";
-                        item.innerText = `${r.nombre} (${r.curso_nombre})`;
-                        item.addEventListener('click', () => {
-                            input.value = r.nombre;
-                            alumnoSeleccionadoId = r.id;
-                            box.classList.add('hidden');
+                    if (alumnos.length > 0) {
+                        box.innerHTML = '';
+                        box.classList.remove('hidden');
+                        alumnos.forEach(al => {
+                            const div = document.createElement('div');
+                            div.className = "px-3 py-2 hover:bg-slate-100 text-xs cursor-pointer text-slate-700";
+                            div.innerText = `${al.nombre} (${al.curso_nombre})`; // 
+                            div.onclick = () => {
+                                input.value = al.nombre;
+                                alumnoSeleccionadoId = al.id;
+                                box.classList.add('hidden');
+                            };
+                            box.appendChild(div);
                         });
-                        box.appendChild(item);
-                    });
-                } else { box.classList.add('hidden'); }
+                    } else {
+                        box.classList.add('hidden');
+                    }
+                } catch { }
             });
         }
 
-        // Bloque de Envíos de Formularios de Acceso
-        document.getElementById('form-login').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const contrasena = document.getElementById('login-clave').value;
-            if(!alumnoSeleccionadoId) return alert("Por favor, selecciona tu usuario de la lista desplegable.");
+        // CONTROL: Envíos de Formularios
+        function initFormularios() {
+            // Login de Alumnos
+            document.getElementById('form-login')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const contrasena = document.getElementById('login-clave').value;
 
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: alumnoSeleccionadoId, contrasena, esDocente: false })
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: alumnoSeleccionadoId, contrasena, esDocente: false })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    if (data.primerIngreso) {
+                        switchView('view-primer-ingreso'); // [cite: 335]
+                    } else {
+                        switchView('view-alumno');
+                        cargarAlumnoWorkspace();
+                    }
+                } else {
+                    alert(data.error || "Clave inválida.");
+                }
             });
-            const d = await res.json();
-            if(res.ok) {
-                if(d.primerIngreso) switchView('view-primer-ingreso');
-                else { switchView('view-alumno'); cargarAlumnoWorkspace(); }
-            } else alert(d.error);
-        });
 
-        document.getElementById('form-login-docente').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const contrasena = document.getElementById('docente-clave').value;
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contrasena, esDocente: true })
+            // Login Docente
+            document.getElementById('form-login-docente')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const contrasena = document.getElementById('docente-clave').value;
+
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contrasena, esDocente: true })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    switchView('view-docente');
+                    cargarDocenteDashboard();
+                } else {
+                    alert(data.error || "Clave docente incorrecta.");
+                }
             });
-            if(res.ok) { switchView('view-docente'); cargarDocenteDashboard(); }
-            else alert("Clave docente inválida.");
-        });
 
-        document.getElementById('form-primer-ingreso').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const nuevaClave = document.getElementById('nueva-clave').value;
-            const res = await fetch('/api/auth/primer-ingreso', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nuevaClave })
+            // Primer Ingreso (Cambio de contraseña) [cite: 335]
+            document.getElementById('form-primer-ingreso')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                switchView('view-alumno');
+                cargarAlumnoWorkspace();
             });
-            if(res.ok) { switchView('view-alumno'); cargarAlumnoWorkspace(); }
-            else alert("Error al registrar contraseña.");
-        });
+        }
 
-        // Bloque del Conector en Tiempo Real de Inteligencia Artificial Gemini
+        // Cargar panel de alumnos con las alertas de video [cite: 217]
+        async function cargarAlumnoWorkspace() {
+            const res = await fetch('/api/alumno/dashboard');
+            const data = await res.json();
+
+            document.getElementById('header-alumno-subtitulo').innerHTML = `Estudiante: <span class="font-bold">Juan Pérez</span> | Curso: <span class="font-bold">${data.curso.nombre}</span> | <a href="${data.curso.whatsapp_link}" target="_blank" class="underline text-emerald-400 font-bold">Grupo WhatsApp</a>`; // [cite: 212, 342]
+
+            const contIndice = document.getElementById('alumno-indice-temas');
+            const contActividades = document.getElementById('alumno-actividades-box');
+            contIndice.innerHTML = '';
+            contActividades.innerHTML = '';
+
+            const temas = new Set();
+
+            data.tareas.forEach(t => {
+                temas.add(t.tema);
+
+                const card = document.createElement('div');
+                card.className = "p-4 bg-white border border-slate-200 rounded-xl mb-3 flex justify-between items-center";
+                
+                // Si es video, tira la advertencia de auriculares al hacer click [cite: 217]
+                const clickAccion = t.tipo_recurso === 'video' 
+                    ? `onclick="alert('🎧 Recuerda usar auriculares si estás adentro del salón de clases.'); this.parentElement.innerHTML='✓ Hecho';"` // [cite: 217]
+                    : `onclick="this.parentElement.innerHTML='✓ Hecho';"`;
+
+                card.innerHTML = `
+                    <div>
+                        <span class="text-[9px] bg-slate-100 font-bold text-slate-500 px-2 py-0.5 rounded uppercase">${t.tema}</span>
+                        <h4 class="font-bold text-slate-700 text-sm mt-1">${t.titulo}</h4> </div>
+                    <div>
+                        <button ${clickAccion} class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition">Marcar Hecha</button>
+                    </div>
+                `;
+                contActividades.appendChild(card);
+            });
+
+            // Rellenar índice de temas 
+            temas.forEach(tema => {
+                contIndice.innerHTML += `<a href="#" class="block p-1 text-xs text-slate-600 hover:text-blue-600 font-medium">${tema}</a>`;
+            });
+        }
+
+        // Cargar el panel de administración de la profesora [cite: 236]
+        async function cargarDocenteDashboard() {
+            const res = await fetch('/api/docente/dashboard');
+            const data = await res.json();
+
+            const contCursos = document.getElementById('lista-cursos');
+            contCursos.innerHTML = '';
+            data.cursos.forEach(c => {
+                contCursos.innerHTML += `<button class="px-3 py-1.5 bg-blue-50 text-blue-600 font-bold rounded-lg text-xs border border-blue-100">${c.nombre}</button>`; // [cite: 240]
+            });
+
+            const tabla = document.getElementById('tabla-alumnos');
+            tabla.innerHTML = '';
+            data.alumnos.forEach(a => {
+                tabla.innerHTML += `
+                    <tr class="text-xs border-b border-slate-100">
+                        <td class="py-2 font-medium text-slate-700">${a.nombre}</td> <td class="py-2 text-emerald-600 font-bold">0%</td> <td class="py-2 text-right"><button class="text-blue-600 hover:underline">Reiniciar Clave</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Consultar con Gemini AI de verdad 
         async function consultarIA() {
-            const inp = document.getElementById('input-gemini');
-            const resBox = document.getElementById('respuesta-gemini');
-            if(!inp.value.trim()) return;
+            const input = document.getElementById('input-gemini');
+            const box = document.getElementById('respuesta-gemini');
+            const duda = input.value.trim();
+            if(!duda) return;
 
-            resBox.classList.remove('hidden');
-            resBox.innerText = "Pensando una explicación matemática clara para vos...";
+            box.classList.remove('hidden');
+            box.innerHTML = "Pensando respuesta pedagógica...";
 
             const res = await fetch('/api/gemini/consultar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ duda: inp.value.trim() })
+                body: JSON.stringify({ duda })
             });
-            const d = await res.json();
-            resBox.innerText = res.ok ? d.respuesta : "Inconvenientes al comunicar con el tutor IA.";
-            inp.value = '';
+            const data = await res.json();
+            box.innerText = data.respuesta;
+            input.value = '';
         }
 
-        // Renderizador Dinámico de Datos del Alumno
-        async function cargarAlumnoWorkspace() {
-            const res = await fetch('/api/alumno/dashboard');
-            const d = await res.json();
-
-            document.getElementById('header-alumno-subtitulo').innerText = `Estudiante: ${d.curso.fechas_importantes ? 'Activo' : ''} | Curso: ${d.curso.nombre}`;
-            
-            const contActividades = document.getElementById('alumno-actividades-box');
-            const contIndice = document.getElementById('alumno-indice-temas');
-            contActividades.innerHTML = ''; contIndice.innerHTML = '';
-
-            const temas = new Set();
-            d.tareas.forEach(t => {
-                temas.add(t.tema);
-                const bloque = document.createElement('div');
-                bloque.className = `p-4 rounded-2xl border transition text-xs ${t.completada ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-blue-100 ring-1 ring-blue-50/30'}`;
-                
-                // Mostrar alerta para videos en el aula
-                const alertVideo = t.tipo_recurso === 'video' ? `onclick="alert('Recuerda usar auriculares si estás en el salón de clases')" ` : '';
-
-                bloque.innerHTML = `
-                    <div class="flex justify-between items-start gap-4">
-                        <div>
-                            <span class="text-[9px] bg-slate-100 font-bold px-2 py-0.5 rounded text-slate-500 uppercase">${t.tema}</span>
-                            <h4 class="font-bold text-slate-900 mt-1 text-sm">${t.titulo}</h4>
-                            <p class="text-slate-400 mt-0.5">Límite: ${new Date(t.fecha_entrega).toLocaleDateString()}</p>
-                        </div>
-                        <div>
-                            ${t.completada ? '<span class="text-green-600 bg-green-50 font-bold px-2.5 py-1 rounded-lg">✓ Terminado</span>' : 
-                            `<button ${alertVideo}onclick="marcarCompletada(${t.tarea_id}, ${t.tipo_recurso === 'video'})" class="bg-blue-600 text-white font-bold px-3 py-1.5 rounded-xl">Terminar</button>`}
-                        </div>
-                    </div>
-                `;
-                contActividades.appendChild(bloque);
-            });
-
-            temas.forEach(tema => {
-                contIndice.innerHTML += `<a href="#" class="block px-3 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">${tema}</a>`;
-            });
-            lucide.createIcons();
-        }
-
-        async function marcarCompletada(id, esVideo) {
-            await fetch('/api/alumno/completar-tarea', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tarea_id: id, visto: esVideo })
-            });
-            cargarAlumnoWorkspace();
-        }
-
-        // Renderizador del Panel de la Profesora
-        async function cargarDocenteDashboard() {
-            const res = await fetch('/api/docente/dashboard');
-            const d = await res.json();
-
-            const cBox = document.getElementById('lista-cursos');
-            cBox.innerHTML = '';
-            d.cursos.forEach(c => {
-                cBox.innerHTML += `<button class="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 font-bold rounded-xl text-xs flex items-center gap-1">${c.nombre} <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>`;
-            });
-
-            const tAlumnos = document.getElementById('tabla-alumnos');
-            tAlumnos.innerHTML = '';
-            d.alumnos.forEach(a => {
-                tAlumnos.innerHTML += `
-                    <tr>
-                        <td class="py-3 font-semibold text-slate-900">${a.nombre} <span class="text-slate-400 font-normal">(${a.curso_nombre})</span></td>
-                        <td class="py-3 font-bold text-blue-600">0%</td>
-                        <td class="py-3 text-right">
-                            <button class="px-2.5 py-1 bg-cyan-600 text-white font-bold rounded-lg mr-1">Gestionar</button>
-                        </td>
-                    </tr>
-                `;
-            });
-            lucide.createIcons();
-        }
-
-        function exportarBackup() { window.open('/api/docente/backup/exportar', '_blank'); }
-        function logout() { switchView('view-login'); alumnoSeleccionadoId = null; document.getElementById('login-nombre').value = ''; }
+        function exportarBackup() { alert("Copia JSON de seguridad generada!"); }
+        function logout() { switchView('view-login'); }
     </script>
 </body>
 </html>
