@@ -53,7 +53,6 @@ function initBuscadorPredictivo() {
     const box = document.getElementById('predictivo-box');
     if (!input || !box) return;
 
-    // Bloque que captura el tipeo y despliega coincidencias dinámicas desde Neon DB
     input.addEventListener('input', async () => {
         const valor = input.value.trim();
         if (valor.length < 1) {
@@ -74,7 +73,6 @@ function initBuscadorPredictivo() {
                     div.className = "px-4 py-2 hover:bg-blue-50 cursor-pointer text-xs font-medium text-slate-700 transition border-b border-slate-50 last:border-none";
                     div.innerText = `${alumno.nombre} (${alumno.curso_nombre})`;
                     
-                    // Al seleccionar, se asienta el ID interno y se autocompleta el input
                     div.addEventListener('click', () => {
                         input.value = alumno.nombre;
                         alumnoSeleccionadoId = alumno.id;
@@ -90,79 +88,106 @@ function initBuscadorPredictivo() {
             console.error("Error consultando buscador predictivo:", err);
         }
     });
+    
+    // Cerrar el buscador si se hace click afuera
+    document.addEventListener('click', (e) => {
+        if (e.target !== input && e.target !== box) {
+            box.classList.add('hidden');
+        }
+    });
 }
 
 function initFormularios() {
-    // Manejo de envío de login de alumnos
+    // FORMULARIO: LOGIN ALUMNOS
     document.getElementById('form-login')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const contrasena = document.getElementById('login-clave').value;
+        const nombreInput = document.getElementById('login-nombre').value;
 
         if (!alumnoSeleccionadoId) {
-            alert("Por favor, escribí y seleccioná tu nombre completo de la lista predictiva.");
+            alert("Por favor, escribí tu nombre y selecciónalo de la lista desplegable.");
             return;
         }
 
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: alumnoSeleccionadoId, contrasena, esDocente: false })
-        });
-        const data = await res.json();
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    id: alumnoSeleccionadoId, 
+                    nombre: nombreInput, 
+                    contrasena: contrasena, 
+                    esDocente: false 
+                })
+            });
+            const data = await res.json();
 
-        if (res.ok) {
-            if (data.primerIngreso) {
-                switchView('view-primer-ingreso');
+            if (res.ok && data.success) {
+                if (data.primerIngreso) {
+                    switchView('view-primer-ingreso');
+                } else {
+                    switchView('view-alumno');
+                    cargarAlumnoWorkspace();
+                }
             } else {
-                switchView('view-alumno');
-                cargarAlumnoWorkspace();
+                alert(data.error || "Datos de ingreso incorrectos.");
             }
-        } else {
-            alert(data.error || "Clave incorrecta.");
+        } catch (err) {
+            alert("Error de conexión con el servidor.");
         }
     });
 
-    // Manejo de ingreso del panel de la profesora
+    // FORMULARIO: LOGIN DOCENTE
     document.getElementById('form-login-docente')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const contrasena = document.getElementById('docente-clave').value;
 
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contrasena, esDocente: true })
-        });
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contrasena, esDocente: true })
+            });
+            const data = await res.json();
 
-        if (res.ok) {
-            switchView('view-docente');
-            cargarDocenteDashboard();
-        } else {
-            alert("Contraseña docente inválida.");
+            if (res.ok && data.success) {
+                switchView('view-docente');
+                cargarDocenteDashboard();
+            } else {
+                alert(data.error || "Contraseña docente incorrecta.");
+            }
+        } catch (err) {
+            alert("Error al conectar con el panel de administración.");
         }
     });
 
-    // Cambio obligatorio de clave por primera vez (mínimo 4 dígitos)
+    // FORMULARIO: PRIMER INGRESO (CAMBIO DE CLAVE)
     document.getElementById('form-primer-ingreso')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const nuevaClave = document.getElementById('nueva-clave').value;
 
-        if(nuevaClave.length < 4) {
+        if (nuevaClave.length < 4) {
             alert("La clave debe tener al menos 4 dígitos.");
             return;
         }
 
-        const res = await fetch('/api/auth/primer-ingreso', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nuevaClave, alumnoId: alumnoSeleccionadoId })
-        });
+        try {
+            const res = await fetch('/api/auth/primer-ingreso', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nuevaClave })
+            });
+            const data = await res.json();
 
-        if (res.ok) {
-            alert("¡Contraseña actualizada con éxito!");
-            switchView('view-alumno');
-            cargarAlumnoWorkspace();
-        } else {
-            alert("Error al intentar guardar la clave.");
+            if (res.ok && data.success) {
+                alert("¡Contraseña actualizada con éxito!");
+                switchView('view-alumno');
+                cargarAlumnoWorkspace();
+            } else {
+                alert(data.error || "Error al intentar registrar tu nueva clave.");
+            }
+        } catch (err) {
+            alert("Error de red al procesar el cambio de clave.");
         }
     });
 }
@@ -178,7 +203,6 @@ async function cargarAlumnoWorkspace() {
         if (!res.ok) return;
         const data = await res.json();
 
-        // Actualización dinámica del encabezado del alumno
         const subId = document.getElementById('header-alumno-subtitulo');
         if (subId && data.curso) {
             let whatsappHtml = data.curso.whatsapp_link 
@@ -187,7 +211,6 @@ async function cargarAlumnoWorkspace() {
             subId.innerHTML = `Curso: <span class="font-bold">${data.curso.nombre}</span>${whatsappHtml}`;
         }
 
-        // Renderizado del Índice de Temas Lateral Requerido
         const contIndice = document.getElementById('alumno-indice-temas');
         const contActividades = document.getElementById('alumno-actividades-box');
         if (contIndice) contIndice.innerHTML = '';
@@ -204,7 +227,6 @@ async function cargarAlumnoWorkspace() {
                     tarea.completada ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-white border-blue-100 shadow-sm'
                 }`;
 
-                // Bloque condicional: Envía alerta de auriculares si la tarea asignada es un video educativo
                 const eventoClick = tarea.tipo_recurso === 'video'
                     ? `onclick="alert('🎧 Recordá usar auriculares si estás adentro del salón de clases.'); marcarActividadHecha(${tarea.tarea_id}, true);"`
                     : `onclick="marcarActividadHecha(${tarea.tarea_id}, false);"`;
@@ -213,7 +235,6 @@ async function cargarAlumnoWorkspace() {
                     ? `<span class="text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg text-xs font-bold">✓ Entregado</span>`
                     : `<button ${eventoClick} class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition">Marcar como Hecha</button>`;
 
-                // Enlaces dinámicos a Cloudinary o Drive según el material de la profesora
                 let linkAdjunto = '';
                 if (tarea.archivo_url) {
                     linkAdjunto = `<a href="${tarea.archivo_url}" target="_blank" class="text-blue-600 font-bold hover:underline text-xs block mt-1"><i data-lucide="file" class="w-3 h-3 inline"></i> Ver Material</a>`;
@@ -229,9 +250,10 @@ async function cargarAlumnoWorkspace() {
                 `;
                 contActividades?.appendChild(card);
             });
+        } else {
+            if (contActividades) contActividades.innerHTML = `<p class="text-xs text-slate-400 italic text-center p-4">No hay actividades asignadas todavía.</p>`;
         }
 
-        // Construcción interactiva del índice por bloques de tema
         temasDetectados.forEach(tema => {
             if (contIndice) {
                 contIndice.innerHTML += `<a href="#" class="block px-2 py-1 text-xs text-slate-600 hover:text-blue-600 transition font-medium">${tema}</a>`;
@@ -253,7 +275,6 @@ async function marcarActividadHecha(tareaId, fueVideo) {
     cargarAlumnoWorkspace();
 }
 
-// Bloque que comunica las dudas matemáticas con la API real de Gemini en Express
 async function consultarIA() {
     const input = document.getElementById('input-gemini');
     const respuestaBox = document.getElementById('respuesta-gemini');
@@ -290,36 +311,53 @@ async function cargarDocenteDashboard() {
         if (!res.ok) return;
         const data = await res.json();
 
-        // Renderizador de listado de cursos asignados
         const contCursos = document.getElementById('lista-cursos');
         if (contCursos) {
             contCursos.innerHTML = '';
-            data.cursos.forEach(curso => {
-                contCursos.innerHTML += `
-                    <button onclick="seleccionarCursoDocente(${curso.id}, '${curso.nombre}')" class="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 font-bold rounded-lg text-xs hover:bg-blue-100 transition">
-                        ${curso.nombre}
-                    </button>
-                `;
-            });
+            if(data.cursos && data.cursos.length > 0) {
+                data.cursos.forEach(curso => {
+                    contCursos.innerHTML += `
+                        <button onclick="seleccionarCursoDocente(${curso.id}, '${curso.nombre}', '${curso.fechas_importantes || ''}')" class="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 font-bold rounded-lg text-xs hover:bg-blue-100 transition">
+                            ${curso.nombre}
+                        </button>
+                    `;
+                });
+            } else {
+                contCursos.innerHTML = `<p class="text-xs text-slate-400 italic">No creaste cursos aún.</p>`;
+            }
         }
 
-        // Renderizador de alumnos registrados en Neon PostgreSQL
         const tablaAlumnos = document.getElementById('tabla-alumnos');
         if (tablaAlumnos) {
             tablaAlumnos.innerHTML = '';
-            data.alumnos.forEach(al => {
-                tablaAlumnos.innerHTML += `
-                    <tr class="border-b border-slate-100 text-xs">
-                        <td class="py-2.5 font-medium text-slate-800">${al.nombre}</td>
-                        <td class="py-2.5 text-right">
-                            <button onclick="reiniciarClaveAlumno(${al.id}, '${al.nombre}')" class="text-blue-600 font-semibold hover:underline bg-slate-50 px-2 py-1 rounded">Reiniciar Clave</button>
-                        </td>
-                    </tr>
-                `;
-            });
+            if(data.alumnos && data.alumnos.length > 0) {
+                data.alumnos.forEach(al => {
+                    tablaAlumnos.innerHTML += `
+                        <tr class="border-b border-slate-100 text-xs">
+                            <td class="py-2.5 font-medium text-slate-800">${al.nombre} <span class="text-slate-400 font-normal">(${al.curso_nombre})</span></td>
+                            <td class="py-2.5 text-blue-600 font-bold">Activo</td>
+                            <td class="py-2.5 text-right">
+                                <button onclick="reiniciarClaveAlumno(${al.id}, '${al.nombre}')" class="text-[10px] text-slate-600 font-semibold bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded transition">Reiniciar Clave</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tablaAlumnos.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-xs text-slate-400 italic">No hay alumnos registrados.</td></tr>`;
+            }
         }
+        
+        if (window.lucide) lucide.createIcons();
     } catch (err) {
         console.error("Error al cargar el panel docente:", err);
+    }
+}
+
+function seleccionarCursoDocente(id, nombre, fechas) {
+    cursoActualDocenteId = id;
+    const fechasBox = document.getElementById('docente-fechas-box');
+    if (fechasBox) {
+        fechasBox.innerText = fechas ? fechas : "No hay fechas importantes agendadas para " + nombre;
     }
 }
 
@@ -330,12 +368,10 @@ async function reiniciarClaveAlumno(id, nombre) {
     }
 }
 
-// Bloque de resguardo de datos: Genera y descarga un volcado JSON completo de seguridad
 function exportarBackup() {
     window.open('/api/docente/backup/exportar', '_blank');
 }
 
-// Desconexión segura de la aplicación (Limpieza de memoria del cliente)
 function logout() {
     alumnoSeleccionadoId = null;
     cursoActualDocenteId = null;
